@@ -84,6 +84,30 @@ export default function SkillDetailScreen() {
         </Card>
       </div>
 
+      {conceptCount > 0 && (
+        <>
+          <h3>Concept Mastery</h3>
+          <div className="SkillDetailScreen__concepts">
+            {Object.entries(skill.concepts as Record<string, { mastery: number; streak: number; contexts: string[] }>).map(([name, data]) => (
+              <div key={name} className="SkillDetailScreen__concept">
+                <div className="SkillDetailScreen__conceptHeader">
+                  <span className="SkillDetailScreen__conceptName">{name.replace(/_/g, ' ')}</span>
+                  <span className="SkillDetailScreen__conceptMastery">
+                    {Math.round((data.mastery || 0) * 100)}%
+                  </span>
+                </div>
+                <div className="SkillDetailScreen__conceptBar">
+                  <div
+                    className="SkillDetailScreen__conceptFill"
+                    style={{ width: `${Math.round((data.mastery || 0) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       <h3>Recent Sessions</h3>
       {sessions.length === 0 ? (
         <p className="SkillDetailScreen__empty">No sessions yet. Start training!</p>

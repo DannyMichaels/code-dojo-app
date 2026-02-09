@@ -16,9 +16,9 @@ export async function listUserSkills(): Promise<UserSkill[]> {
   return res.data.skills;
 }
 
-export async function startSkill(query: string): Promise<UserSkill> {
+export async function startSkill(query: string): Promise<{ skill: UserSkill; onboardingSessionId: string }> {
   const res = await api.post('/user-skills', { query });
-  return res.data.skill;
+  return { skill: res.data.skill, onboardingSessionId: res.data.onboardingSessionId };
 }
 
 export async function getUserSkill(id: string): Promise<UserSkill> {

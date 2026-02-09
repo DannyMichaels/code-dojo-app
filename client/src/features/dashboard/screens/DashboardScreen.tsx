@@ -49,9 +49,9 @@ export default function DashboardScreen() {
       <AddSkillDialog
         open={showAddSkill}
         onClose={() => setShowAddSkill(false)}
-        onAdded={(skillId) => {
+        onAdded={(skillId, onboardingSessionId) => {
           setShowAddSkill(false);
-          navigate(`/skills/${skillId}`);
+          navigate(`/train/${skillId}/${onboardingSessionId}`);
         }}
       />
     </div>

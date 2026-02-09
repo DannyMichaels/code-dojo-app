@@ -7,7 +7,7 @@ import './AddSkillDialog.scss';
 interface AddSkillDialogProps {
   open: boolean;
   onClose: () => void;
-  onAdded: (skillId: string) => void;
+  onAdded: (skillId: string, onboardingSessionId: string) => void;
 }
 
 export default function AddSkillDialog({ open, onClose, onAdded }: AddSkillDialogProps) {
@@ -21,9 +21,9 @@ export default function AddSkillDialog({ open, onClose, onAdded }: AddSkillDialo
     if (!query.trim()) return;
 
     try {
-      const skill = await addSkill(query.trim());
+      const { skill, onboardingSessionId } = await addSkill(query.trim());
       setQuery('');
-      onAdded(skill._id);
+      onAdded(skill._id, onboardingSessionId);
     } catch {
       // error handled by store
     }

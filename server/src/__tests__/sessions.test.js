@@ -35,7 +35,8 @@ describe('Sessions API', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.sessions).toHaveLength(1);
+    // 2 sessions: 1 auto-created onboarding + 1 manually created training
+    expect(res.body.sessions).toHaveLength(2);
   });
 
   it('GET /:sid should get session detail', async () => {

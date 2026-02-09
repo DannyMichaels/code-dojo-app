@@ -1,6 +1,7 @@
 import SkillCatalog from '../models/SkillCatalog.js';
 import UserSkill from '../models/UserSkill.js';
 import BeltHistory from '../models/BeltHistory.js';
+import Session from '../models/Session.js';
 import { normalize } from '../services/skillNormalizer.js';
 import { getClient } from '../services/anthropic.js';
 
@@ -132,12 +133,19 @@ export async function startSkill(req, res, next) {
     // Increment usedByCount
     await SkillCatalog.findByIdAndUpdate(catalog._id, { $inc: { usedByCount: 1 } });
 
+    // Auto-create onboarding session
+    const onboardingSession = await Session.create({
+      skillId: userSkill._id,
+      userId: req.userId,
+      type: 'onboarding',
+    });
+
     // Populate for response
     const populated = await UserSkill.findById(userSkill._id)
       .populate('skillCatalogId', 'name slug icon')
       .lean();
 
-    res.status(201).json({ skill: populated });
+    res.status(201).json({ skill: populated, onboardingSessionId: onboardingSession._id });
   } catch (err) {
     next(err);
   }

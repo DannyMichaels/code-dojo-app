@@ -43,6 +43,50 @@
     color: $grayLight;
   }
 
+  &__concepts {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-xl;
+  }
+
+  &__concept {
+    background: $background-color-alt;
+    border-radius: $radius-sm;
+    padding: $spacing-sm $spacing-md;
+  }
+
+  &__conceptHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__conceptName {
+    text-transform: capitalize;
+    font-size: 0.875rem;
+  }
+
+  &__conceptMastery {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $grayLight;
+  }
+
+  &__conceptBar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  &__conceptFill {
+    height: 100%;
+    background: $primaryColor;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
   &__empty {
     color: $grayLight;
     text-align: center;

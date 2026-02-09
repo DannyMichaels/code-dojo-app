@@ -8,7 +8,7 @@ interface SkillStore {
   loading: boolean;
   error: string | null;
   fetchSkills: () => Promise<void>;
-  addSkill: (query: string) => Promise<UserSkill>;
+  addSkill: (query: string) => Promise<{ skill: UserSkill; onboardingSessionId: string }>;
   removeSkill: (id: string) => Promise<void>;
   togglePrivacy: (id: string, isPublic: boolean) => Promise<void>;
   clearError: () => void;
@@ -33,9 +33,9 @@ const useSkillStore = create<SkillStore>()(
     addSkill: async (query: string) => {
       set({ loading: true, error: null });
       try {
-        const skill = await skillService.startSkill(query);
+        const { skill, onboardingSessionId } = await skillService.startSkill(query);
         set({ skills: [...get().skills, skill], loading: false });
-        return skill;
+        return { skill, onboardingSessionId };
       } catch (err: any) {
         set({ loading: false, error: err.response?.data?.error || 'Failed to add skill' });
         throw err;
