@@ -1,0 +1,45 @@
+@use '../../../styles/variables' as *;
+
+.TrainingScreen {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 0px);
+
+  &--loading,
+  &--error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: $grayLight;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-sm $spacing-md;
+    border-bottom: 1px solid $grayMid;
+
+    h2 {
+      font-family: $fontFamilySecondary;
+      font-size: 1.125rem;
+      margin: 0;
+    }
+  }
+
+  &__type {
+    font-size: 0.75rem;
+    color: $grayLight;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: $radius-sm;
+  }
+
+  &__chat {
+    flex: 1;
+    overflow: hidden;
+  }
+}

@@ -4,6 +4,8 @@ import AppLayout from '../layouts/AppLayout';
 import LoginScreen from '../features/auth/screens/LoginScreen';
 import RegisterScreen from '../features/auth/screens/RegisterScreen';
 import DashboardScreen from '../features/dashboard/screens/DashboardScreen';
+import SkillDetailScreen from '../features/skills/screens/SkillDetailScreen';
+import TrainingScreen from '../features/training/screens/TrainingScreen';
 
 const router = createBrowserRouter([
   {
@@ -17,6 +19,9 @@ const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: '/dashboard', element: <DashboardScreen /> },
+      { path: '/skills/:id', element: <SkillDetailScreen /> },
+      { path: '/train/:skillId', element: <TrainingScreen /> },
+      { path: '/train/:skillId/:sessionId', element: <TrainingScreen /> },
     ],
   },
   { path: '/', element: <Navigate to="/dashboard" replace /> },

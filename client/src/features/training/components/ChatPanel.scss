@@ -1,0 +1,34 @@
+@use '../../../styles/variables' as *;
+
+.ChatPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: $background-color;
+
+  &__messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-md;
+  }
+
+  &__empty {
+    text-align: center;
+    color: $grayLight;
+    padding: 60px $spacing-md;
+    font-size: 0.875rem;
+  }
+
+  &__streaming {
+    display: flex;
+    justify-content: center;
+    padding: $spacing-sm;
+  }
+
+  &__error {
+    color: $colorDanger;
+    padding: $spacing-xs $spacing-md;
+    font-size: 0.8125rem;
+    text-align: center;
+  }
+}

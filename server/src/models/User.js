@@ -17,6 +17,25 @@ const userSchema = new mongoose.Schema({
     trim: true,
     default: null,
   },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    minlength: 3,
+    maxlength: 30,
+    match: /^[a-z0-9_-]+$/,
+  },
+  bio: {
+    type: String,
+    maxlength: 500,
+    default: '',
+  },
+  avatarUrl: {
+    type: String,
+    default: null,
+  },
   created: {
     type: Date,
     default: Date.now,

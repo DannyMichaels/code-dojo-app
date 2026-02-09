@@ -1,0 +1,48 @@
+@use '../../../styles/variables' as *;
+
+.AddSkillDialog {
+  background: $background-color-alt;
+  border: 1px solid $grayMid;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  width: 90%;
+  max-width: 440px;
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  &__title {
+    font-family: $fontFamilySecondary;
+    font-size: 1.25rem;
+    margin: 0 0 $spacing-xs;
+  }
+
+  &__desc {
+    color: $grayLight;
+    font-size: 0.875rem;
+    margin-bottom: $spacing-md;
+  }
+
+  &__error {
+    background: rgba($colorDanger, 0.15);
+    color: $colorDanger;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $radius-sm;
+    font-size: 0.8125rem;
+    margin-bottom: $spacing-sm;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    margin-top: $spacing-md;
+  }
+}

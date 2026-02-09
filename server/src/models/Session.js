@@ -42,7 +42,7 @@ const questionSchema = new mongoose.Schema({
 const sessionSchema = new mongoose.Schema({
   skillId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Skill',
+    ref: 'UserSkill',
     required: true,
   },
   userId: {

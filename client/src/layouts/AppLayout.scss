@@ -41,11 +41,38 @@
     color: $primaryColorWhite;
     font-size: 0.9375rem;
     transition: background $transition-default;
+    text-decoration: none;
 
     &:hover {
       background: $background-color-alt-glass;
       color: $primaryColorWhite;
     }
+
+    &--active {
+      background: $background-color-alt-glass;
+      color: $primaryColor;
+    }
+
+    &--skill {
+      font-size: 0.8125rem;
+      padding: $spacing-xs $spacing-md $spacing-xs $spacing-lg;
+    }
+  }
+
+  &__skills {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: $spacing-xs;
+  }
+
+  &__skillsLabel {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $grayLight;
+    padding: $spacing-xs $spacing-md;
+    margin-top: $spacing-sm;
   }
 
   &__user {

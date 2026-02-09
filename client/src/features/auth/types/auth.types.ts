@@ -1,7 +1,10 @@
 export interface User {
   _id: string;
   email: string;
+  username: string;
   name: string | null;
+  bio: string;
+  avatarUrl: string | null;
   created: string;
   lastSession: string | null;
   totalSessions: number;

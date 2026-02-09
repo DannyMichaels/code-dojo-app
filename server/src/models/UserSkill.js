@@ -20,23 +20,16 @@ const reinforcementItemSchema = new mongoose.Schema({
   sourceSession: { type: mongoose.Schema.Types.ObjectId, ref: 'Session', default: null },
 }, { _id: false });
 
-const beltHistorySchema = new mongoose.Schema({
-  belt: { type: String, required: true },
-  achievedAt: { type: Date, default: Date.now },
-  sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Session', default: null },
-}, { _id: false });
-
-const skillSchema = new mongoose.Schema({
+const userSkillSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  skillName: {
-    type: String,
+  skillCatalogId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SkillCatalog',
     required: true,
-    trim: true,
-    lowercase: true,
   },
   currentBelt: {
     type: String,
@@ -47,10 +40,9 @@ const skillSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  beltHistory: [beltHistorySchema],
-  trainingContext: {
-    type: String,
-    default: '',
+  isPublic: {
+    type: Boolean,
+    default: true,
   },
   concepts: {
     type: Map,
@@ -60,6 +52,6 @@ const skillSchema = new mongoose.Schema({
   reinforcementQueue: [reinforcementItemSchema],
 }, { timestamps: true });
 
-skillSchema.index({ userId: 1, skillName: 1 }, { unique: true });
+userSkillSchema.index({ userId: 1, skillCatalogId: 1 }, { unique: true });
 
-export default mongoose.model('Skill', skillSchema);
+export default mongoose.model('UserSkill', userSkillSchema);

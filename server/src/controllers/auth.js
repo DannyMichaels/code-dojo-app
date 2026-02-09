@@ -9,15 +9,20 @@ function generateToken(userId) {
 
 export async function register(req, res, next) {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, username, name } = req.body;
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) {
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
+    const existingUsername = await User.findOne({ username: username.toLowerCase() });
+    if (existingUsername) {
+      return res.status(409).json({ error: 'Username already taken' });
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ email, passwordHash, name });
+    const user = await User.create({ email, passwordHash, username, name });
     const token = generateToken(user._id);
 
     res.status(201).json({ token, user });

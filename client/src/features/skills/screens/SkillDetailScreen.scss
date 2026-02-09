@@ -1,0 +1,89 @@
+@use '../../../styles/variables' as *;
+
+.SkillDetailScreen {
+  &--loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-family: $fontFamilySecondary;
+      margin: 0 0 $spacing-xs;
+    }
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-md;
+    margin-bottom: $spacing-xl;
+  }
+
+  &__stat {
+    text-align: center;
+  }
+
+  &__statValue {
+    display: block;
+    font-family: $fontFamilySecondary;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  &__statLabel {
+    font-size: 0.8125rem;
+    color: $grayLight;
+  }
+
+  &__empty {
+    color: $grayLight;
+    text-align: center;
+    padding: $spacing-xl;
+  }
+
+  &__sessions {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__session {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    text-transform: capitalize;
+  }
+
+  &__sessionDate {
+    color: $grayLight;
+    font-size: 0.8125rem;
+    margin-left: auto;
+  }
+
+  &__sessionStatus {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    &--active {
+      color: $primaryColor;
+    }
+
+    &--completed {
+      color: $colorSuccess;
+    }
+
+    &--abandoned {
+      color: $grayLight;
+    }
+  }
+}

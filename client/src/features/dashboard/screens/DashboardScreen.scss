@@ -1,15 +1,28 @@
 @use '../../../styles/variables' as *;
 
 .DashboardScreen {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xs;
+  }
+
   &__title {
     font-family: $fontFamilySecondary;
     font-size: 1.75rem;
-    margin-bottom: $spacing-sm;
+    margin: 0;
   }
 
   &__subtitle {
     color: $grayLight;
     margin-bottom: $spacing-xl;
+  }
+
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 80px 0;
   }
 
   &__empty {
@@ -18,5 +31,11 @@
     padding: 80px $spacing-lg;
     border: 1px dashed $grayMid;
     border-radius: $radius-lg;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: $spacing-md;
   }
 }

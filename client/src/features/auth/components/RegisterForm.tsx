@@ -8,7 +8,7 @@ import { registerSchema, type RegisterInput } from '../schemas/auth.schema';
 export default function RegisterForm() {
   const navigate = useNavigate();
   const { register, loading, error, clearError } = useAuthStore();
-  const [form, setForm] = useState<RegisterInput>({ email: '', password: '', name: '' });
+  const [form, setForm] = useState<RegisterInput>({ email: '', password: '', username: '' });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,12 +44,12 @@ export default function RegisterForm() {
       <h2 className="Form__title">Create Account</h2>
       { error && <div className="Form__error">{ error }</div> }
       <Input
-        name="name"
-        label="Name"
-        placeholder="Your name"
-        value={ form.name }
+        name="username"
+        label="Username"
+        placeholder="your-username"
+        value={ form.username }
         onChange={ handleChange }
-        error={ fieldErrors.name }
+        error={ fieldErrors.username }
       />
       <Input
         name="email"

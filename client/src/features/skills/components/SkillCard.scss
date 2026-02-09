@@ -1,0 +1,28 @@
+@use '../../../styles/variables' as *;
+
+.SkillCard {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-sm;
+  }
+
+  &__name {
+    font-family: $fontFamilySecondary;
+    font-size: 1.125rem;
+    margin: 0;
+  }
+
+  &__stats {
+    display: flex;
+    gap: $spacing-md;
+    font-size: 0.8125rem;
+    color: $grayLight;
+  }
+
+  &__assess {
+    color: $primaryColor;
+    font-weight: 600;
+  }
+}
