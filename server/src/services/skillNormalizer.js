@@ -184,7 +184,9 @@ If the query is ambiguous (could mean multiple things), set ambiguous to true an
     ],
   });
 
-  const text = response.content[0].text.trim();
+  let text = response.content[0].text.trim();
+  // Strip markdown code fences if present (Claude sometimes wraps JSON)
+  text = text.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
   return JSON.parse(text);
 }
 

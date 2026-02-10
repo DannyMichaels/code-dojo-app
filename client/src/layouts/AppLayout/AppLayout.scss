@@ -99,6 +99,10 @@
     }
   }
 
+  &__search {
+    padding: $spacing-xs 0;
+  }
+
   &__skills {
     display: flex;
     flex-direction: column;
@@ -121,6 +125,33 @@
     display: flex;
     flex-direction: column;
     gap: $spacing-sm;
+  }
+
+  &__profileLink {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-sm;
+    border-radius: $radius-md;
+    text-decoration: none;
+    color: $primaryColorWhite;
+    transition: background $transition-default;
+
+    &:hover {
+      background: $background-color-alt-glass;
+    }
+
+    &--active {
+      background: $background-color-alt-glass;
+      color: $primaryColor;
+    }
+  }
+
+  &__profileName {
+    font-size: 0.875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__username {

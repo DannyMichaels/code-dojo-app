@@ -64,6 +64,22 @@ export async function getMe(req, res, next) {
   }
 }
 
+export async function uploadAvatar(req, res, next) {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { avatar: req.body.avatar },
+      { new: true },
+    );
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function updateMe(req, res, next) {
   try {
     const updates = {};

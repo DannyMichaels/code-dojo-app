@@ -16,6 +16,10 @@ export async function getSession(skillId: string, sessionId: string): Promise<Se
   return res.data.session;
 }
 
+export async function deleteSession(skillId: string, sessionId: string): Promise<void> {
+  await api.delete(`/user-skills/${skillId}/sessions/${sessionId}`);
+}
+
 /**
  * Send a message and stream the response via SSE.
  * Returns an abort controller for cancellation.

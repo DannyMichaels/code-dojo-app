@@ -1,0 +1,8 @@
+@use '../../../../styles/variables' as *;
+
+.ConceptList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xl;
+}

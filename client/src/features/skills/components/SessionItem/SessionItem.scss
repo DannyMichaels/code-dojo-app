@@ -1,0 +1,48 @@
+@use '../../../../styles/variables' as *;
+
+.SessionItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  text-transform: capitalize;
+
+  &__date {
+    color: $grayLight;
+    font-size: 0.8125rem;
+    margin-left: auto;
+  }
+
+  &__status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    &--active {
+      color: $primaryColor;
+    }
+
+    &--completed {
+      color: $colorSuccess;
+    }
+
+    &--abandoned {
+      color: $grayLight;
+    }
+  }
+
+  &__delete {
+    background: none;
+    border: none;
+    color: $grayLight;
+    font-size: 1.125rem;
+    cursor: pointer;
+    padding: 0 $spacing-xs;
+    line-height: 1;
+    transition: color $transition-default;
+
+    &:hover {
+      color: $colorDanger;
+    }
+  }
+}

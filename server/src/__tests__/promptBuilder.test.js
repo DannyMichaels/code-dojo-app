@@ -30,9 +30,12 @@ describe('promptBuilder', () => {
     expect(prompt).toContain('Skill: JavaScript');
     expect(prompt).toContain('Focus on closures');
 
-    // Layer 3: Current State
+    // Layer 3: Current State — enriched concept labels
     expect(prompt).toContain('Current Belt: **yellow**');
     expect(prompt).toContain('Tracked Concepts: 2');
+    expect(prompt).toContain('exp:5');
+    expect(prompt).toContain('streak:2');
+    expect(prompt).toContain('last:0d ago');
     expect(prompt).toContain('Reinforcement Queue: prototypes (high)');
 
     // Layer 4: Session Instructions

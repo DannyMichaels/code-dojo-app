@@ -33,3 +33,21 @@ export interface ConceptDetail {
   beltLevel: string;
   lastSeen: string | null;
 }
+
+export interface BeltInfo {
+  currentBelt: string;
+  nextBelt: string | null;
+  eligible: boolean;
+  beltOrder: string[];
+  currentBeltIndex: number;
+  details: {
+    conceptPct: number;
+    requiredPct: number;
+    sessionCount: number;
+    requiredSessions: number;
+    totalConcepts: number;
+    requiredConcepts: number;
+    masteredConcepts: number;
+    reason?: string;
+  };
+}

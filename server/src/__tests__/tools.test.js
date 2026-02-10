@@ -126,14 +126,58 @@ describe('update_mastery', () => {
     expect(concept.streak).toBe(0);
   });
 
-  it('records mastery update in session', async () => {
+  it('records mastery update in session with from -> to format', async () => {
     await handleToolCall(
       { name: 'update_mastery', input: { concept: 'closures', success: true } },
       { sessionId: session._id, skillId: skill._id, userId: user._id }
     );
 
     const updated = await Session.findById(session._id);
-    expect(updated.masteryUpdates.get('closures')).toBe('82%');
+    expect(updated.masteryUpdates.get('closures')).toBe('0% -> 82%');
+  });
+
+  it('uses Claude-provided mastery score', async () => {
+    const result = await handleToolCall(
+      { name: 'update_mastery', input: { concept: 'closures', success: false, mastery: 0.25 } },
+      { sessionId: session._id, skillId: skill._id, userId: user._id }
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.mastery).toBe(0.25);
+
+    const updated = await UserSkill.findById(skill._id);
+    const concept = updated.concepts.get('closures');
+    expect(concept.mastery).toBe(0.25);
+  });
+
+  it('allows mastery to decrease', async () => {
+    // First call: set mastery to 0.5
+    await handleToolCall(
+      { name: 'update_mastery', input: { concept: 'loops', success: true, mastery: 0.5 } },
+      { sessionId: session._id, skillId: skill._id, userId: user._id }
+    );
+
+    // Second call: decrease mastery to 0.45
+    const result = await handleToolCall(
+      { name: 'update_mastery', input: { concept: 'loops', success: false, mastery: 0.45 } },
+      { sessionId: session._id, skillId: skill._id, userId: user._id }
+    );
+
+    expect(result.mastery).toBe(0.45);
+
+    const updated = await UserSkill.findById(skill._id);
+    expect(updated.concepts.get('loops').mastery).toBe(0.45);
+  });
+
+  it('falls back to formula when mastery not provided', async () => {
+    const result = await handleToolCall(
+      { name: 'update_mastery', input: { concept: 'variables', success: true } },
+      { sessionId: session._id, skillId: skill._id, userId: user._id }
+    );
+
+    expect(result.success).toBe(true);
+    // computeMastery formula result for 1 exposure, 1 success
+    expect(result.mastery).toBeCloseTo(0.84, 1);
   });
 
   it('returns error for non-existent skill', async () => {

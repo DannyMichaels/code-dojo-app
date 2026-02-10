@@ -5,6 +5,7 @@ export interface User {
   name: string | null;
   bio: string;
   avatarUrl: string | null;
+  avatar: string | null;
   created: string;
   lastSession: string | null;
   totalSessions: number;

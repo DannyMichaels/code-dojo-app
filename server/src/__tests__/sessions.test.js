@@ -4,6 +4,7 @@ import { streamMessage } from '../services/anthropic.js';
 import app from '../app.js';
 import Session from '../models/Session.js';
 import { createTestUser, createTestUserWithSkill } from './helpers.js';
+import { releaseSessionLock } from '../services/sessionLock.js';
 
 // Mock the anthropic module — vi.mock is hoisted before imports
 vi.mock('../services/anthropic.js', async (importOriginal) => {
@@ -98,6 +99,66 @@ describe('Sessions API', () => {
     expect(res.status).toBe(404);
   });
 
+  it('DELETE should soft-delete a session (set status to abandoned)', async () => {
+    const createRes = await request(app)
+      .post(`/api/user-skills/${skillId}/sessions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ type: 'training' });
+
+    const sid = createRes.body.session._id;
+
+    const res = await request(app)
+      .delete(`/api/user-skills/${skillId}/sessions/${sid}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+
+    // Verify it's marked abandoned in DB
+    const session = await Session.findById(sid);
+    expect(session.status).toBe('abandoned');
+  });
+
+  it('GET should not list abandoned sessions', async () => {
+    const createRes = await request(app)
+      .post(`/api/user-skills/${skillId}/sessions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ type: 'training' });
+
+    const sid = createRes.body.session._id;
+
+    // Soft-delete it
+    await request(app)
+      .delete(`/api/user-skills/${skillId}/sessions/${sid}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const res = await request(app)
+      .get(`/api/user-skills/${skillId}/sessions`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    // Only the auto-created onboarding session should remain (the training one is abandoned)
+    expect(res.body.sessions).toHaveLength(1);
+    expect(res.body.sessions.every(s => s.status !== 'abandoned')).toBe(true);
+  });
+
+  it('DELETE should return 404 for non-owned session', async () => {
+    const createRes = await request(app)
+      .post(`/api/user-skills/${skillId}/sessions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ type: 'training' });
+
+    const sid = createRes.body.session._id;
+
+    const { token: token2 } = await createTestUser();
+
+    const res = await request(app)
+      .delete(`/api/user-skills/${skillId}/sessions/${sid}`)
+      .set('Authorization', `Bearer ${token2}`);
+
+    expect(res.status).toBe(404);
+  });
+
   it('should persist AI response after tool-use iterations', async () => {
     // Create a session
     const createRes = await request(app)
@@ -149,5 +210,57 @@ describe('Sessions API', () => {
     expect(assistantMessages).toHaveLength(1);
     expect(assistantMessages[0].content).toContain('Let me analyze your code.');
     expect(assistantMessages[0].content).toContain('Great work on this exercise!');
+  });
+
+  it('should return 409 when session is already processing a message', async () => {
+    const createRes = await request(app)
+      .post(`/api/user-skills/${skillId}/sessions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ type: 'training' });
+    const sid = createRes.body.session._id;
+
+    // Mock streamMessage to resolve immediately
+    streamMessage.mockImplementation(async ({ onText }) => {
+      if (onText) onText('Hello');
+      return { text: 'Hello', toolCalls: [], response: { content: [{ type: 'text', text: 'Hello' }] } };
+    });
+
+    // Manually acquire the lock to simulate an in-progress message
+    const { acquireSessionLock } = await import('../services/sessionLock.js');
+    acquireSessionLock(sid);
+
+    try {
+      // Request should get 409 because the lock is held
+      const res = await request(app)
+        .post(`/api/user-skills/${skillId}/sessions/${sid}/messages`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ content: 'Should be rejected' });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error).toContain('already processing');
+    } finally {
+      // Release the lock so it doesn't affect other tests
+      releaseSessionLock(sid);
+    }
+  });
+
+  it('DELETE should return 404 for already-abandoned session', async () => {
+    const createRes = await request(app)
+      .post(`/api/user-skills/${skillId}/sessions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ type: 'training' });
+    const sid = createRes.body.session._id;
+
+    // First delete should succeed
+    const res1 = await request(app)
+      .delete(`/api/user-skills/${skillId}/sessions/${sid}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res1.status).toBe(200);
+
+    // Second delete should return 404 (already abandoned)
+    const res2 = await request(app)
+      .delete(`/api/user-skills/${skillId}/sessions/${sid}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res2.status).toBe(404);
   });
 });

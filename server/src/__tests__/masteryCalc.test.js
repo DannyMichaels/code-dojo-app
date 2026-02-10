@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeMastery, checkBeltAdvancement, getNextBelt, BELT_ORDER } from '../services/masteryCalc.js';
+import { computeMastery, applyTimeDecay, checkBeltAdvancement, getNextBelt, BELT_ORDER } from '../services/masteryCalc.js';
 
 describe('computeMastery', () => {
   it('returns 0 for null or no exposure', () => {
@@ -112,6 +112,47 @@ describe('computeMastery', () => {
 
     expect(high).toBeLessThanOrEqual(1);
     expect(high).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('applyTimeDecay', () => {
+  it('returns 0 for null or empty concept', () => {
+    expect(applyTimeDecay(null)).toBe(0);
+    expect(applyTimeDecay({})).toBe(0);
+    expect(applyTimeDecay({ mastery: 0 })).toBe(0);
+  });
+
+  it('returns stored mastery for recently seen concept', () => {
+    const mastery = applyTimeDecay({
+      mastery: 0.75,
+      lastSeen: new Date(),
+    });
+    expect(mastery).toBeCloseTo(0.75, 1);
+  });
+
+  it('applies decay for stale concepts', () => {
+    const mastery = applyTimeDecay({
+      mastery: 0.80,
+      lastSeen: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+    });
+    // 45/90 = 0.5 decay factor, so 0.80 * 0.5 = 0.40
+    expect(mastery).toBeCloseTo(0.40, 1);
+  });
+
+  it('fully decays after 90+ days', () => {
+    const mastery = applyTimeDecay({
+      mastery: 0.90,
+      lastSeen: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000), // 100 days ago
+    });
+    expect(mastery).toBe(0);
+  });
+
+  it('returns 0 when lastSeen is null', () => {
+    const mastery = applyTimeDecay({
+      mastery: 0.75,
+      lastSeen: null,
+    });
+    expect(mastery).toBe(0);
   });
 });
 

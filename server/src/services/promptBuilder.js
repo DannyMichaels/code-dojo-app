@@ -9,7 +9,7 @@
  */
 
 import { TRAINING_PROTOCOL } from '../prompts/trainingProtocol.js';
-import { computeMastery, BELT_ORDER } from './masteryCalc.js';
+import { applyTimeDecay, BELT_ORDER } from './masteryCalc.js';
 import { getPrioritizedConcepts } from './spacedRepetition.js';
 
 /**
@@ -63,8 +63,13 @@ function buildCurrentState(userSkill, socialStats) {
     const weak = [];
 
     for (const [name, data] of concepts) {
-      const mastery = computeMastery(data);
-      const label = `${name} (${(mastery * 100).toFixed(0)}%)`;
+      const mastery = applyTimeDecay(data);
+      const daysSince = data.lastSeen
+        ? Math.round((Date.now() - new Date(data.lastSeen).getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+      const lastStr = daysSince !== null ? `${daysSince}d ago` : 'never';
+      const obsCount = data.observations?.length || 0;
+      const label = `${name} (${(mastery * 100).toFixed(0)}%, exp:${data.exposureCount || 0}, streak:${data.streak || 0}, last:${lastStr}${obsCount ? `, obs:${obsCount}` : ''})`;
       if (mastery >= 0.8) strong.push(label);
       else if (mastery >= 0.5) developing.push(label);
       else weak.push(label);
@@ -127,7 +132,8 @@ Instructions:
 5. Based on all responses, determine their starting belt level
 6. Use \`set_training_context\` to save skill-specific training context (what makes code idiomatic, key concept areas, common anti-patterns, evaluation criteria)
 7. Use \`complete_session\` when done
-8. Be encouraging but honest about where they're starting`;
+8. Be encouraging but honest about where they're starting
+9. **Follow the Scaffolding Policy**: When a student's code has issues, do NOT show them the corrected solution. Tell them what's wrong conceptually and let them retry. Only reveal the answer if they explicitly give up. This is critical — even during onboarding, you are assessing their ability to self-correct, not just their first attempt.`;
 
     case 'assessment':
       return `## Session Type: Belt Assessment
@@ -142,8 +148,9 @@ Instructions:
 2. Problems should be challenging but fair for the current belt level
 3. Evaluate strictly — belt promotions should be earned
 4. Use all observation and mastery tools for each problem
-5. After all problems, use \`complete_session\` with honest evaluation
-6. If they pass, congratulate them. If not, give constructive feedback on what to work on.`;
+5. **Follow the Scaffolding Policy**: Never reveal solutions during an assessment. If the student fails a challenge, note the failure and move on to the next challenge. No hints during assessments — this is evaluation mode.
+6. After all problems, use \`complete_session\` with honest evaluation
+7. If they pass, congratulate them. If not, give constructive feedback on what to work on.`;
 
     case 'kata':
       return `## Session Type: Kata (Maintenance)
@@ -174,7 +181,8 @@ Instructions:
    c. Use \`record_observation\` for each notable pattern
    d. Use \`update_mastery\` for each concept exercised
    e. Queue reinforcement for weak areas
-7. Give focused feedback and complete the session`;
+7. **Follow the Scaffolding Policy**: If the solution has errors, do NOT show the corrected code. Tell them what's wrong, give a hint, and let them try again. Progressively reveal more help on subsequent attempts. Only show the full solution if the student explicitly gives up. For minor style issues on otherwise correct code, it's fine to show the cleaner version.
+8. Only use \`complete_session\` after the student has either solved the problem correctly or explicitly given up`;
   }
 }
 

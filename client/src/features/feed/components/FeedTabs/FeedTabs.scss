@@ -1,0 +1,28 @@
+@use '../../../../styles/variables' as *;
+
+.FeedTabs {
+  display: flex;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-lg;
+  border-bottom: 1px solid $grayDark;
+
+  &__tab {
+    padding: $spacing-sm $spacing-md;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: $grayLight;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: color $transition-default, border-color $transition-default;
+
+    &:hover {
+      color: $primaryColorWhite;
+    }
+
+    &--active {
+      color: $primaryColor;
+      border-bottom-color: $primaryColor;
+    }
+  }
+}

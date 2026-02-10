@@ -6,6 +6,8 @@ import '../models/UserSkill.js';
 import '../models/SkillCatalog.js';
 import '../models/Session.js';
 import '../models/BeltHistory.js';
+import '../models/Follow.js';
+import '../models/Activity.js';
 
 const TEST_URI = 'mongodb://localhost:27017/code-dojo-test';
 

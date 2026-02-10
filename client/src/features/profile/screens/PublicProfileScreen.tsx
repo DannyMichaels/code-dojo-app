@@ -1,21 +1,38 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { getPublicProfile, getPublicSkills } from '../services/profile.service';
+import { isFollowing as checkIsFollowing } from '../../social/services/social.service';
+import useAuthStore from '../../auth/store/auth.store';
+import Avatar from '../../../components/shared/Avatar';
 import BeltBadge from '../../skills/components/BeltBadge';
 import Spinner from '../../../components/shared/Spinner';
+import FollowButton from '../components/FollowButton';
+import AvatarUpload from '../components/AvatarUpload';
+import FollowListModal from '../components/FollowListModal';
 import type { Belt } from '../../skills/types/skill.types';
 import type { PublicProfile, PublicSkill } from '../types/profile.types';
 import './PublicProfileScreen.scss';
 
 export default function PublicProfileScreen() {
   const { username } = useParams<{ username: string }>();
+  const currentUser = useAuthStore((s) => s.user);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [skills, setSkills] = useState<PublicSkill[]>([]);
+  const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [followModal, setFollowModal] = useState<{ open: boolean; mode: 'followers' | 'following' }>({
+    open: false,
+    mode: 'followers',
+  });
+
+  const isOwnProfile = currentUser?.username === username;
 
   useEffect(() => {
     if (!username) return;
+    setLoading(true);
+    setError(null);
+
     async function load() {
       try {
         const [p, s] = await Promise.all([
@@ -24,6 +41,11 @@ export default function PublicProfileScreen() {
         ]);
         setProfile(p);
         setSkills(s);
+
+        if (!isOwnProfile && p._id) {
+          const following = await checkIsFollowing(p._id);
+          setIsFollowing(following);
+        }
       } catch {
         setError('User not found');
       } finally {
@@ -31,7 +53,7 @@ export default function PublicProfileScreen() {
       }
     }
     load();
-  }, [username]);
+  }, [username, isOwnProfile]);
 
   if (loading) {
     return (
@@ -49,23 +71,90 @@ export default function PublicProfileScreen() {
     );
   }
 
-  const initial = (profile.name || profile.username || '?')[0].toUpperCase();
+  const handleFollowToggle = (following: boolean) => {
+    setIsFollowing(following);
+    setProfile((prev) =>
+      prev
+        ? {
+            ...prev,
+            followerCount: prev.followerCount + (following ? 1 : -1),
+          }
+        : prev,
+    );
+  };
 
   return (
     <div className="PublicProfileScreen">
       <div className="PublicProfileScreen__header">
-        {profile.avatarUrl ? (
-          <img className="PublicProfileScreen__avatar" src={profile.avatarUrl} alt={profile.username} />
-        ) : (
-          <div className="PublicProfileScreen__avatarFallback">{initial}</div>
-        )}
+        <div className="PublicProfileScreen__avatarWrap">
+          {isOwnProfile ? (
+            <AvatarUpload
+              avatar={currentUser?.avatar}
+              avatarUrl={currentUser?.avatarUrl}
+              name={profile.name}
+              username={profile.username}
+            />
+          ) : (
+            <Avatar
+              avatar={profile.avatar}
+              avatarUrl={profile.avatarUrl}
+              name={profile.name}
+              username={profile.username}
+              size="xl"
+            />
+          )}
+        </div>
+
         <div className="PublicProfileScreen__info">
-          <h1>{profile.name || profile.username}</h1>
+          <div className="PublicProfileScreen__nameRow">
+            <h1>{profile.name || profile.username}</h1>
+            {!isOwnProfile && (
+              <FollowButton
+                userId={profile._id}
+                initialIsFollowing={isFollowing}
+                onToggle={handleFollowToggle}
+              />
+            )}
+            {isOwnProfile && (
+              <Link to="/settings" className="PublicProfileScreen__editLink">
+                Edit Profile
+              </Link>
+            )}
+          </div>
           <span className="PublicProfileScreen__username">@{profile.username}</span>
           {profile.bio && <p className="PublicProfileScreen__bio">{profile.bio}</p>}
-          <span className="PublicProfileScreen__joined">
-            Joined {new Date(profile.created).toLocaleDateString()}
-          </span>
+
+          <div className="PublicProfileScreen__stats">
+            <span className="PublicProfileScreen__stat">
+              <strong>{profile.skillCount}</strong> skills
+            </span>
+            {profile.highestBelt && (
+              <span className="PublicProfileScreen__stat">
+                <BeltBadge belt={profile.highestBelt as Belt} />
+              </span>
+            )}
+            <span className="PublicProfileScreen__stat">
+              <strong>{profile.currentStreak}</strong> day streak
+            </span>
+            <span className="PublicProfileScreen__stat">
+              Joined {new Date(profile.created).toLocaleDateString()}
+            </span>
+          </div>
+
+          <div className="PublicProfileScreen__followCounts">
+            <button
+              className="PublicProfileScreen__followCount"
+              onClick={() => setFollowModal({ open: true, mode: 'followers' })}
+            >
+              <strong>{profile.followerCount}</strong> followers
+            </button>
+            <button
+              className="PublicProfileScreen__followCount"
+              onClick={() => setFollowModal({ open: true, mode: 'following' })}
+            >
+              <strong>{profile.followingCount}</strong> following
+            </button>
+          </div>
         </div>
       </div>
 
@@ -77,7 +166,7 @@ export default function PublicProfileScreen() {
         <p className="PublicProfileScreen__empty">No public skills yet.</p>
       ) : (
         <div className="PublicProfileScreen__skills">
-          {skills.map(skill => (
+          {skills.map((skill) => (
             <div key={skill._id} className="PublicProfileScreen__skillCard">
               <span className="PublicProfileScreen__skillName">
                 {skill.skillCatalogId.name}
@@ -87,6 +176,13 @@ export default function PublicProfileScreen() {
           ))}
         </div>
       )}
+
+      <FollowListModal
+        open={followModal.open}
+        userId={profile._id}
+        mode={followModal.mode}
+        onClose={() => setFollowModal((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }

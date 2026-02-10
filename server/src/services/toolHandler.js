@@ -3,6 +3,7 @@ import UserSkill from '../models/UserSkill.js';
 import SkillCatalog from '../models/SkillCatalog.js';
 import { promoteBelt, failAssessment, checkAssessmentEligibility } from './assessmentService.js';
 import { computeMastery } from './masteryCalc.js';
+import { emitBeltPromotion, emitAssessmentPassed, checkAndEmitStreakMilestone } from './activityService.js';
 
 /**
  * Process a tool call from Claude and write results to MongoDB.
@@ -49,12 +50,12 @@ async function handleRecordObservation(input, sessionId) {
   return { success: true, message: `Observation recorded: ${input.type} on ${input.concept}` };
 }
 
-async function handleUpdateMastery(input, { sessionId, skillId }) {
+async function handleUpdateMastery(input, { sessionId, skillId }, _retrying) {
   const skill = await UserSkill.findById(skillId);
   if (!skill) return { error: 'Skill not found' };
 
   const conceptKey = input.concept.toLowerCase().replace(/\s+/g, '_');
-  const existing = skill.concepts.get(conceptKey) || {
+  const defaults = {
     mastery: 0,
     exposureCount: 0,
     successCount: 0,
@@ -65,6 +66,10 @@ async function handleUpdateMastery(input, { sessionId, skillId }) {
     beltLevel: input.belt_level || 'white',
     readyForNewContext: false,
   };
+  const raw = skill.concepts.get(conceptKey);
+  const existing = raw ? raw.toObject() : defaults;
+
+  const previousMastery = existing.mastery;
 
   existing.exposureCount += 1;
   existing.lastSeen = new Date();
@@ -76,22 +81,38 @@ async function handleUpdateMastery(input, { sessionId, skillId }) {
     existing.streak = 0;
   }
 
-  existing.mastery = computeMastery(existing);
+  if (typeof input.mastery === 'number' && input.mastery >= 0 && input.mastery <= 1) {
+    existing.mastery = input.mastery;
+  } else {
+    existing.mastery = computeMastery(existing);
+  }
 
   if (input.context && !existing.contexts.includes(input.context)) {
-    existing.contexts.push(input.context);
+    existing.contexts = [...existing.contexts, input.context];
   }
 
   if (input.belt_level) {
     existing.beltLevel = input.belt_level;
   }
 
-  skill.concepts.set(conceptKey, existing);
-  await skill.save();
+  // Version-checked atomic update
+  const result = await UserSkill.findOneAndUpdate(
+    { _id: skillId, __v: skill.__v },
+    { $set: { [`concepts.${conceptKey}`]: existing }, $inc: { __v: 1 } },
+    { new: true }
+  );
 
-  // Record mastery update in session log
+  if (!result) {
+    // Version conflict — retry once
+    if (!_retrying) {
+      return handleUpdateMastery(input, { sessionId, skillId }, true);
+    }
+    return { error: 'Concurrent modification — please retry' };
+  }
+
+  // Record mastery update in session log with "from -> to" format
   await Session.findByIdAndUpdate(sessionId, {
-    [`masteryUpdates.${conceptKey}`]: `${(existing.mastery * 100).toFixed(0)}%`,
+    [`masteryUpdates.${conceptKey}`]: `${(previousMastery * 100).toFixed(0)}% -> ${(existing.mastery * 100).toFixed(0)}%`,
   });
 
   return { success: true, concept: conceptKey, mastery: existing.mastery };
@@ -113,16 +134,17 @@ async function handleQueueReinforcement(input, { sessionId, skillId }) {
 }
 
 async function handleCompleteSession(input, { sessionId, skillId }) {
-  const session = await Session.findById(sessionId);
-  if (!session) return { error: 'Session not found' };
-
-  session.status = 'completed';
-  session.evaluation = {
-    correctness: input.correctness,
-    quality: input.quality,
-  };
-  session.notes = input.notes || '';
-  await session.save();
+  // Atomic update: also prevents completing an already-completed session
+  const session = await Session.findOneAndUpdate(
+    { _id: sessionId, status: 'active' },
+    {
+      status: 'completed',
+      evaluation: { correctness: input.correctness, quality: input.quality },
+      notes: input.notes || '',
+    },
+    { new: true }
+  );
+  if (!session) return { error: 'Session not found or already completed' };
 
   const result = { success: true, message: 'Session completed' };
 
@@ -133,6 +155,14 @@ async function handleCompleteSession(input, { sessionId, skillId }) {
         const promotion = await promoteBelt(skillId, sessionId);
         result.promotion = promotion;
         result.message = `Assessment passed! Promoted from ${promotion.fromBelt} to ${promotion.toBelt}!`;
+
+        // Emit activity events for belt promotion and assessment pass
+        const skill = await UserSkill.findById(skillId).populate('skillCatalogId', 'name slug');
+        if (skill?.skillCatalogId) {
+          const { name: skillName, slug: skillSlug } = skill.skillCatalogId;
+          emitBeltPromotion(session.userId, { skillName, skillSlug, fromBelt: promotion.fromBelt, toBelt: promotion.toBelt });
+          emitAssessmentPassed(session.userId, { skillName, skillSlug, belt: promotion.toBelt });
+        }
       } catch {
         // Promotion failed (e.g. already at max belt)
       }
@@ -148,6 +178,9 @@ async function handleCompleteSession(input, { sessionId, skillId }) {
       // Non-critical
     }
   }
+
+  // Check for streak milestones on all session completions
+  checkAndEmitStreakMilestone(session.userId);
 
   return result;
 }

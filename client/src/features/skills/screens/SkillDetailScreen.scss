@@ -12,12 +12,36 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: $spacing-xl;
+    margin-bottom: $spacing-lg;
 
     h1 {
       font-family: $fontFamilySecondary;
       margin: 0 0 $spacing-xs;
     }
+  }
+
+  &__beltInfo {
+    background: none;
+    border: 1px solid $grayMid;
+    color: $grayLight;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: $spacing-sm;
+    vertical-align: middle;
+    transition: color $transition-default, border-color $transition-default;
+
+    &:hover {
+      color: $primaryColor;
+      border-color: $primaryColor;
+    }
+  }
+
+  &__privacy {
+    margin-bottom: $spacing-lg;
   }
 
   &__stats {
@@ -27,107 +51,9 @@
     margin-bottom: $spacing-xl;
   }
 
-  &__stat {
-    text-align: center;
-  }
-
-  &__statValue {
-    display: block;
-    font-family: $fontFamilySecondary;
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
-
-  &__statLabel {
-    font-size: 0.8125rem;
-    color: $grayLight;
-  }
-
-  &__concepts {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-sm;
-    margin-bottom: $spacing-xl;
-  }
-
-  &__concept {
-    background: $background-color-alt;
-    border-radius: $radius-sm;
-    padding: $spacing-sm $spacing-md;
-  }
-
-  &__conceptHeader {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: $spacing-xs;
-  }
-
-  &__conceptName {
-    text-transform: capitalize;
-    font-size: 0.875rem;
-  }
-
-  &__conceptMastery {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: $grayLight;
-  }
-
-  &__conceptBar {
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  &__conceptFill {
-    height: 100%;
-    background: $primaryColor;
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
-
-  &__empty {
-    color: $grayLight;
-    text-align: center;
-    padding: $spacing-xl;
-  }
-
-  &__sessions {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xs;
-  }
-
-  &__session {
-    display: flex;
-    align-items: center;
-    gap: $spacing-md;
-    text-transform: capitalize;
-  }
-
-  &__sessionDate {
-    color: $grayLight;
-    font-size: 0.8125rem;
-    margin-left: auto;
-  }
-
-  &__sessionStatus {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-
-    &--active {
-      color: $primaryColor;
-    }
-
-    &--completed {
-      color: $colorSuccess;
-    }
-
-    &--abandoned {
-      color: $grayLight;
-    }
+  &__danger {
+    margin-top: $spacing-xl;
+    padding-top: $spacing-lg;
+    border-top: 1px solid $grayDark;
   }
 }

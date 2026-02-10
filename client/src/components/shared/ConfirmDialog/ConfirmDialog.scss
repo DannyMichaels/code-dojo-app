@@ -1,0 +1,37 @@
+@use '../../../styles/variables' as *;
+
+.ConfirmDialog {
+  background: $background-color-alt;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  max-width: 400px;
+  width: 90%;
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+
+  &__title {
+    font-family: $fontFamilySecondary;
+    margin: 0 0 $spacing-sm;
+  }
+
+  &__message {
+    color: $grayLight;
+    line-height: 1.5;
+    margin: 0 0 $spacing-lg;
+    font-size: 0.875rem;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+  }
+}

@@ -1,0 +1,49 @@
+@use '../../../styles/variables' as *;
+
+.Toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  cursor: pointer;
+
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &__track {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: $grayMid;
+    border: none;
+    padding: 0;
+    cursor: inherit;
+    transition: background $transition-default;
+
+    &--on {
+      background: $primaryColor;
+    }
+  }
+
+  &__thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $primaryColorWhite;
+    transition: transform $transition-default;
+
+    .Toggle__track--on & {
+      transform: translateX(18px);
+    }
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    color: $primaryColorWhite;
+  }
+}

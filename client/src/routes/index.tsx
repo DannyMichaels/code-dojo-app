@@ -9,6 +9,8 @@ import TrainingScreen from '../features/training/screens/TrainingScreen';
 import SessionReviewScreen from '../features/training/screens/SessionReviewScreen';
 import PublicProfileScreen from '../features/profile/screens/PublicProfileScreen';
 import SettingsScreen from '../features/settings/screens/SettingsScreen';
+import FeedScreen from '../features/feed/screens/FeedScreen';
+import SearchResultsScreen from '../features/social/screens/SearchResultsScreen';
 
 const router = createBrowserRouter([
   {
@@ -21,7 +23,9 @@ const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
+      { path: '/feed', element: <FeedScreen /> },
       { path: '/dashboard', element: <DashboardScreen /> },
+      { path: '/search', element: <SearchResultsScreen /> },
       { path: '/skills/:id', element: <SkillDetailScreen /> },
       { path: '/train/:skillId', element: <TrainingScreen /> },
       { path: '/train/:skillId/:sessionId', element: <TrainingScreen /> },
@@ -30,7 +34,7 @@ const router = createBrowserRouter([
       { path: '/settings', element: <SettingsScreen /> },
     ],
   },
-  { path: '/', element: <Navigate to="/dashboard" replace /> },
+  { path: '/', element: <Navigate to="/feed" replace /> },
 ]);
 
 export default router;

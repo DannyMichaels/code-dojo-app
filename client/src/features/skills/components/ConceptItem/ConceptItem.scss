@@ -1,0 +1,24 @@
+@use '../../../../styles/variables' as *;
+
+.ConceptItem {
+  background: $background-color-alt;
+  border-radius: $radius-sm;
+  padding: $spacing-sm $spacing-md;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__name {
+    text-transform: capitalize;
+    font-size: 0.875rem;
+  }
+
+  &__mastery {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $grayLight;
+  }
+}

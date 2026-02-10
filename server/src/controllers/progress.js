@@ -1,7 +1,7 @@
 import UserSkill from '../models/UserSkill.js';
 import Session from '../models/Session.js';
 import BeltHistory from '../models/BeltHistory.js';
-import { computeMastery } from '../services/masteryCalc.js';
+import { applyTimeDecay, checkBeltAdvancement, BELT_ORDER } from '../services/masteryCalc.js';
 
 // GET /api/progress — Cross-skill dashboard summary
 export async function getDashboardProgress(req, res, next) {
@@ -22,7 +22,7 @@ export async function getDashboardProgress(req, res, next) {
       let conceptCount = 0;
 
       for (const [, data] of Object.entries(concepts)) {
-        totalMastery += computeMastery(data);
+        totalMastery += applyTimeDecay(data);
         conceptCount++;
       }
 
@@ -43,6 +43,42 @@ export async function getDashboardProgress(req, res, next) {
         totalSessions,
         completedSessions,
         skills: skillSummaries,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// GET /api/progress/:skillId/belt-info — Belt advancement details
+export async function getBeltInfo(req, res, next) {
+  try {
+    const skill = await UserSkill.findOne({
+      _id: req.params.skillId,
+      userId: req.userId,
+    });
+
+    if (!skill) {
+      return res.status(404).json({ error: 'Skill not found' });
+    }
+
+    const sessionCount = await Session.countDocuments({
+      skillId: skill._id,
+      userId: req.userId,
+      status: { $ne: 'abandoned' },
+    });
+
+    const advancement = checkBeltAdvancement(skill, sessionCount);
+    const currentIdx = BELT_ORDER.indexOf(skill.currentBelt);
+
+    res.json({
+      beltInfo: {
+        currentBelt: skill.currentBelt,
+        nextBelt: advancement.nextBelt,
+        eligible: advancement.eligible,
+        beltOrder: BELT_ORDER,
+        currentBeltIndex: currentIdx,
+        details: advancement.details,
       },
     });
   } catch (err) {
@@ -84,7 +120,7 @@ export async function getSkillProgress(req, res, next) {
     const concepts = skill.concepts || {};
     const conceptDetails = Object.entries(concepts).map(([name, data]) => ({
       name,
-      mastery: Math.round(computeMastery(data) * 100),
+      mastery: Math.round(applyTimeDecay(data) * 100),
       exposureCount: data.exposureCount || 0,
       streak: data.streak || 0,
       contexts: data.contexts || [],

@@ -1,0 +1,61 @@
+@use '../../../../styles/variables' as *;
+
+.SearchResultsScreen {
+  max-width: 600px;
+  margin: 0 auto;
+
+  &__title {
+    font-family: $fontFamilySecondary;
+    margin: 0 0 $spacing-lg;
+  }
+
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: $spacing-xl 0;
+  }
+
+  &__empty {
+    text-align: center;
+    color: $grayLight;
+    padding: $spacing-xl 0;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  &__card {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md;
+    background: $background-color-alt;
+    border-radius: $radius-md;
+    text-decoration: none;
+    color: $primaryColorWhite;
+    transition: background $transition-default;
+
+    &:hover {
+      background: $background-color-alt-glass;
+    }
+  }
+
+  &__info {
+    min-width: 0;
+  }
+
+  &__name {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  &__username {
+    display: block;
+    font-size: 0.8125rem;
+    color: $grayLight;
+  }
+}

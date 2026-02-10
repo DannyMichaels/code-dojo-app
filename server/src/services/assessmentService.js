@@ -34,6 +34,8 @@ export async function checkAssessmentEligibility(userSkillId) {
 
 /**
  * Promote a user to the next belt after passing an assessment.
+ * Creates history record first, then does version-checked belt update.
+ * If the update fails due to concurrent modification, rolls back the history record.
  */
 export async function promoteBelt(userSkillId, sessionId) {
   const skill = await UserSkill.findById(userSkillId);
@@ -44,12 +46,7 @@ export async function promoteBelt(userSkillId, sessionId) {
 
   const fromBelt = skill.currentBelt;
 
-  // Update belt
-  skill.currentBelt = nextBelt;
-  skill.assessmentAvailable = false;
-  await skill.save();
-
-  // Record belt history
+  // Create history record FIRST (if this fails, belt hasn't changed yet)
   await BeltHistory.create({
     userId: skill.userId,
     userSkillId: skill._id,
@@ -58,6 +55,19 @@ export async function promoteBelt(userSkillId, sessionId) {
     toBelt: nextBelt,
     sessionId,
   });
+
+  // Then promote belt with version check
+  const updated = await UserSkill.findOneAndUpdate(
+    { _id: userSkillId, __v: skill.__v },
+    { currentBelt: nextBelt, assessmentAvailable: false, $inc: { __v: 1 } },
+    { new: true }
+  );
+
+  if (!updated) {
+    // Version conflict — clean up the history record we just created
+    await BeltHistory.deleteOne({ userSkillId: skill._id, sessionId });
+    throw new Error('Concurrent modification — please retry');
+  }
 
   return { fromBelt, toBelt: nextBelt };
 }

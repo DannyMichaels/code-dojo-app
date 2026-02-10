@@ -1,0 +1,33 @@
+@use '../../../../styles/variables' as *;
+
+.FeedScreen {
+  max-width: 600px;
+  margin: 0 auto;
+
+  &__title {
+    font-family: $fontFamilySecondary;
+    margin: 0 0 $spacing-lg;
+  }
+
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: $spacing-xl 0;
+  }
+
+  &__empty {
+    text-align: center;
+    color: $grayLight;
+    padding: $spacing-xl 0;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  &__loadMore {
+    margin-top: $spacing-md;
+  }
+}

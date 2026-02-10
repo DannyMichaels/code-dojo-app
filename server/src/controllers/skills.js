@@ -4,6 +4,7 @@ import BeltHistory from '../models/BeltHistory.js';
 import Session from '../models/Session.js';
 import { normalize } from '../services/skillNormalizer.js';
 import { getClient } from '../services/anthropic.js';
+import { emitSkillStarted } from '../services/activityService.js';
 
 // GET /api/skills/catalog
 export async function listCatalog(req, res, next) {
@@ -115,37 +116,46 @@ export async function startSkill(req, res, next) {
       return res.status(409).json({ error: 'You already have this skill', skill: existing });
     }
 
-    // Create UserSkill
+    // Create UserSkill (the core record)
     const userSkill = await UserSkill.create({
       userId: req.userId,
       skillCatalogId: catalog._id,
     });
 
-    // Create initial belt history entry
-    await BeltHistory.create({
-      userId: req.userId,
-      userSkillId: userSkill._id,
-      skillCatalogId: catalog._id,
-      fromBelt: null,
-      toBelt: 'white',
-    });
+    try {
+      // Create initial belt history entry
+      await BeltHistory.create({
+        userId: req.userId,
+        userSkillId: userSkill._id,
+        skillCatalogId: catalog._id,
+        fromBelt: null,
+        toBelt: 'white',
+      });
 
-    // Increment usedByCount
-    await SkillCatalog.findByIdAndUpdate(catalog._id, { $inc: { usedByCount: 1 } });
+      // Increment usedByCount (atomic $inc, safe)
+      await SkillCatalog.findByIdAndUpdate(catalog._id, { $inc: { usedByCount: 1 } });
 
-    // Auto-create onboarding session
-    const onboardingSession = await Session.create({
-      skillId: userSkill._id,
-      userId: req.userId,
-      type: 'onboarding',
-    });
+      // Auto-create onboarding session
+      const onboardingSession = await Session.create({
+        skillId: userSkill._id,
+        userId: req.userId,
+        type: 'onboarding',
+      });
 
-    // Populate for response
-    const populated = await UserSkill.findById(userSkill._id)
-      .populate('skillCatalogId', 'name slug icon')
-      .lean();
+      // Populate for response
+      const populated = await UserSkill.findById(userSkill._id)
+        .populate('skillCatalogId', 'name slug icon')
+        .lean();
 
-    res.status(201).json({ skill: populated, onboardingSessionId: onboardingSession._id });
+      emitSkillStarted(req.userId, { skillName: catalog.name, skillSlug: catalog.slug });
+
+      res.status(201).json({ skill: populated, onboardingSessionId: onboardingSession._id });
+    } catch (err) {
+      // Rollback: delete the UserSkill and any associated records
+      await UserSkill.findByIdAndDelete(userSkill._id);
+      await BeltHistory.deleteMany({ userSkillId: userSkill._id });
+      throw err;
+    }
   } catch (err) {
     next(err);
   }
@@ -198,8 +208,12 @@ export async function deleteUserSkill(req, res, next) {
       return res.status(404).json({ error: 'Skill not found' });
     }
 
-    // Decrement usedByCount
-    await SkillCatalog.findByIdAndUpdate(skill.skillCatalogId, { $inc: { usedByCount: -1 } });
+    // Cascade delete: decrement count, remove sessions and belt history
+    await Promise.all([
+      SkillCatalog.findByIdAndUpdate(skill.skillCatalogId, { $inc: { usedByCount: -1 } }),
+      Session.deleteMany({ skillId: skill._id, userId: req.userId }),
+      BeltHistory.deleteMany({ userSkillId: skill._id }),
+    ]);
 
     res.json({ message: 'Skill removed' });
   } catch (err) {

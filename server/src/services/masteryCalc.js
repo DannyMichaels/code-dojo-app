@@ -91,7 +91,7 @@ export function checkBeltAdvancement(userSkill, sessionCount) {
     const beltIdx = BELT_ORDER.indexOf(data.beltLevel || 'white');
     if (beltIdx <= currentIdx) {
       totalAtLevel++;
-      const mastery = computeMastery(data);
+      const mastery = applyTimeDecay(data);
       if (mastery >= 0.8) {
         masteredAtLevel++;
       }
@@ -125,6 +125,22 @@ export function getNextBelt(currentBelt) {
   const idx = BELT_ORDER.indexOf(currentBelt);
   if (idx < 0 || idx >= BELT_ORDER.length - 1) return null;
   return BELT_ORDER[idx + 1];
+}
+
+/**
+ * Apply time decay to a concept's stored mastery.
+ * Used at read-time to reflect staleness between sessions.
+ * Claude sets "fresh" mastery; this handles display/scheduling decay.
+ * @param {Object} concept - concept data from UserSkill.concepts Map
+ * @returns {number} 0.0 to 1.0
+ */
+export function applyTimeDecay(concept) {
+  if (!concept || !concept.mastery) return 0;
+  const daysSince = concept.lastSeen
+    ? (Date.now() - new Date(concept.lastSeen).getTime()) / (1000 * 60 * 60 * 24)
+    : 999;
+  const decayFactor = Math.max(0, 1 - (daysSince / 90));
+  return Math.max(0, Math.min(1, concept.mastery * decayFactor));
 }
 
 export { BELT_ORDER, BELT_THRESHOLDS };

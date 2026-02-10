@@ -1,0 +1,13 @@
+@use '../../../../styles/variables' as *;
+
+.SessionList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  &__empty {
+    color: $grayLight;
+    text-align: center;
+    padding: $spacing-xl;
+  }
+}

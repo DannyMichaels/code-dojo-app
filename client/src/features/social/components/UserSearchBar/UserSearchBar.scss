@@ -1,0 +1,90 @@
+@use '../../../../styles/variables' as *;
+
+.UserSearchBar {
+  position: relative;
+
+  &--compact {
+    .UserSearchBar__input {
+      font-size: 0.8125rem;
+      padding: $spacing-xs $spacing-sm;
+    }
+  }
+
+  &__input {
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+    background: $background-color;
+    border: 1px solid $grayDark;
+    border-radius: $radius-md;
+    color: $primaryColorWhite;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color $transition-default;
+
+    &::placeholder {
+      color: $grayLight;
+    }
+
+    &:focus {
+      border-color: $primaryColor;
+    }
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: $background-color-alt;
+    border: 1px solid $grayDark;
+    border-radius: $radius-md;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  &__loading {
+    padding: $spacing-sm $spacing-md;
+    color: $grayLight;
+    font-size: 0.8125rem;
+  }
+
+  &__result {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+    background: none;
+    border: none;
+    color: $primaryColorWhite;
+    cursor: pointer;
+    text-align: left;
+    transition: background $transition-default;
+
+    &:hover {
+      background: $background-color-alt-glass;
+    }
+  }
+
+  &__resultInfo {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  &__resultName {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__resultUsername {
+    display: block;
+    font-size: 0.75rem;
+    color: $grayLight;
+  }
+}

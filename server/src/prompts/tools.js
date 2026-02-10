@@ -56,6 +56,12 @@ export const TRAINING_TOOLS = [
           enum: ['white', 'yellow', 'orange', 'green', 'blue', 'purple', 'brown', 'black'],
           description: 'The belt level at which this concept typically emerges',
         },
+        mastery: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+          description: 'Your assessed mastery score (0.0-1.0) based on holistic judgment. Factor in quality, recurring patterns, help needed, context variety. Can decrease for recurring errors. Set to the student\'s demonstrated level RIGHT NOW — time decay is applied automatically. If omitted, mastery is computed from counters.',
+        },
       },
       required: ['concept', 'success'],
     },

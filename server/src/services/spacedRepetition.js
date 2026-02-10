@@ -8,7 +8,7 @@
  * 4. New concepts (ready to introduce at current belt level)
  */
 
-import { computeMastery, BELT_ORDER } from './masteryCalc.js';
+import { applyTimeDecay, BELT_ORDER } from './masteryCalc.js';
 
 /**
  * Get prioritized list of concepts to target in next session.
@@ -35,7 +35,7 @@ export function getPrioritizedConcepts(userSkill) {
   for (const [name, data] of concepts) {
     if (isAlreadyQueued(results, name)) continue;
 
-    const mastery = computeMastery(data);
+    const mastery = applyTimeDecay(data);
     const daysSince = data.lastSeen
       ? (Date.now() - new Date(data.lastSeen).getTime()) / (1000 * 60 * 60 * 24)
       : 999;
@@ -55,7 +55,7 @@ export function getPrioritizedConcepts(userSkill) {
   for (const [name, data] of concepts) {
     if (isAlreadyQueued(results, name)) continue;
 
-    const mastery = computeMastery(data);
+    const mastery = applyTimeDecay(data);
     const contextCount = data.contexts?.length || 0;
 
     if (mastery >= 0.5 && contextCount < 3 && data.exposureCount >= 2) {
@@ -75,7 +75,7 @@ export function getPrioritizedConcepts(userSkill) {
     const beltIdx = BELT_ORDER.indexOf(data.beltLevel || 'white');
     if (beltIdx > currentBeltIdx) continue; // skip concepts above current belt
 
-    const mastery = computeMastery(data);
+    const mastery = applyTimeDecay(data);
     if (mastery < 0.7 && data.exposureCount >= 1) {
       results.push({
         concept: name,
@@ -111,7 +111,7 @@ function getConceptMastery(concepts, name) {
   const key = name.toLowerCase().replace(/\s+/g, '_');
   const data = concepts.get(key) || concepts.get(name);
   if (!data) return 0;
-  return computeMastery(data);
+  return applyTimeDecay(data);
 }
 
 function isAlreadyQueued(results, name) {

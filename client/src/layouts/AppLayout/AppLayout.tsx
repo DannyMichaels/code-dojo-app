@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import useAuthStore from '../../features/auth/store/auth.store';
 import useSkillStore from '../../features/skills/store/skill.store';
+import Avatar from '../../components/shared/Avatar';
+import UserSearchBar from '../../features/social/components/UserSearchBar';
 import './AppLayout.scss';
 
 export default function AppLayout() {
@@ -37,11 +39,22 @@ export default function AppLayout() {
         <div className="AppLayout__brand">Code Dojo</div>
         <nav className="AppLayout__nav">
           <Link
+            to="/feed"
+            className={`AppLayout__link ${location.pathname === '/feed' ? 'AppLayout__link--active' : ''}`}
+          >
+            Feed
+          </Link>
+          <Link
             to="/dashboard"
             className={`AppLayout__link ${location.pathname === '/dashboard' ? 'AppLayout__link--active' : ''}`}
           >
             Dashboard
           </Link>
+
+          <div className="AppLayout__search">
+            <UserSearchBar compact />
+          </div>
+
           {skills.length > 0 && (
             <div className="AppLayout__skills">
               <span className="AppLayout__skillsLabel">Skills</span>
@@ -58,13 +71,29 @@ export default function AppLayout() {
           )}
         </nav>
         <div className="AppLayout__user">
+          {user && (
+            <Link
+              to={`/u/${user.username}`}
+              className={`AppLayout__profileLink ${location.pathname === `/u/${user.username}` ? 'AppLayout__profileLink--active' : ''}`}
+            >
+              <Avatar
+                avatar={user.avatar}
+                avatarUrl={user.avatarUrl}
+                name={user.name}
+                username={user.username}
+                size="sm"
+              />
+              <span className="AppLayout__profileName">
+                {user.name || user.username}
+              </span>
+            </Link>
+          )}
           <Link
             to="/settings"
             className={`AppLayout__link ${location.pathname === '/settings' ? 'AppLayout__link--active' : ''}`}
           >
             Settings
           </Link>
-          <span className="AppLayout__username">{user?.name || user?.username || user?.email}</span>
           <button className="AppLayout__logout" onClick={logout}>
             Logout
           </button>

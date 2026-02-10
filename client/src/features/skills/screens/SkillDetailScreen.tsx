@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getUserSkill } from '../services/skill.service';
-import { listSessions } from '../../training/services/session.service';
+import { listSessions, deleteSession } from '../../training/services/session.service';
+import useSkillStore from '../store/skill.store';
 import BeltBadge from '../components/BeltBadge';
+import BeltInfoModal from '../components/BeltInfoModal';
 import Button from '../../../components/shared/Button';
-import Card from '../../../components/shared/Card';
+import StatCard from '../../../components/shared/StatCard';
 import Spinner from '../../../components/shared/Spinner';
+import Toggle from '../../../components/shared/Toggle';
+import ConfirmDialog from '../../../components/shared/ConfirmDialog';
+import ConceptList from '../components/ConceptList';
+import SessionList from '../components/SessionList';
 import type { UserSkill } from '../types/skill.types';
 import type { Session } from '../../training/types/session.types';
 import './SkillDetailScreen.scss';
@@ -13,9 +19,12 @@ import './SkillDetailScreen.scss';
 export default function SkillDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { togglePrivacy, removeSkill } = useSkillStore();
   const [skill, setSkill] = useState<UserSkill | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [beltModalOpen, setBeltModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -33,6 +42,24 @@ export default function SkillDetailScreen() {
     }
     load();
   }, [id]);
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!skill) return;
+    await deleteSession(skill._id, sessionId);
+    setSessions(prev => prev.filter(s => s._id !== sessionId));
+  };
+
+  const handleTogglePrivacy = async () => {
+    if (!skill) return;
+    await togglePrivacy(skill._id, !skill.isPublic);
+    setSkill(prev => prev ? { ...prev, isPublic: !prev.isPublic } : prev);
+  };
+
+  const handleDeleteSkill = async () => {
+    if (!skill) return;
+    await removeSkill(skill._id);
+    navigate('/dashboard');
+  };
 
   if (loading) {
     return (
@@ -55,83 +82,63 @@ export default function SkillDetailScreen() {
         <div>
           <h1>{catalog.name}</h1>
           <BeltBadge belt={skill.currentBelt} size="lg" />
+          <button
+            className="SkillDetailScreen__beltInfo"
+            onClick={() => setBeltModalOpen(true)}
+            title="Belt progression info"
+          >
+            ?
+          </button>
         </div>
         <Button onClick={() => navigate(`/train/${skill._id}`)}>
           Start Training
         </Button>
       </div>
 
-      <div className="SkillDetailScreen__stats">
-        <Card>
-          <div className="SkillDetailScreen__stat">
-            <span className="SkillDetailScreen__statValue">{conceptCount}</span>
-            <span className="SkillDetailScreen__statLabel">Concepts</span>
-          </div>
-        </Card>
-        <Card>
-          <div className="SkillDetailScreen__stat">
-            <span className="SkillDetailScreen__statValue">{sessions.length}</span>
-            <span className="SkillDetailScreen__statLabel">Sessions</span>
-          </div>
-        </Card>
-        <Card>
-          <div className="SkillDetailScreen__stat">
-            <span className="SkillDetailScreen__statValue">
-              {skill.assessmentAvailable ? 'Ready' : 'Not yet'}
-            </span>
-            <span className="SkillDetailScreen__statLabel">Assessment</span>
-          </div>
-        </Card>
+      <div className="SkillDetailScreen__privacy">
+        <Toggle
+          checked={skill.isPublic}
+          onChange={handleTogglePrivacy}
+          label="Public"
+        />
       </div>
 
-      {conceptCount > 0 && (
-        <>
-          <h3>Concept Mastery</h3>
-          <div className="SkillDetailScreen__concepts">
-            {Object.entries(skill.concepts as Record<string, { mastery: number; streak: number; contexts: string[] }>).map(([name, data]) => (
-              <div key={name} className="SkillDetailScreen__concept">
-                <div className="SkillDetailScreen__conceptHeader">
-                  <span className="SkillDetailScreen__conceptName">{name.replace(/_/g, ' ')}</span>
-                  <span className="SkillDetailScreen__conceptMastery">
-                    {Math.round((data.mastery || 0) * 100)}%
-                  </span>
-                </div>
-                <div className="SkillDetailScreen__conceptBar">
-                  <div
-                    className="SkillDetailScreen__conceptFill"
-                    style={{ width: `${Math.round((data.mastery || 0) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      <div className="SkillDetailScreen__stats">
+        <StatCard value={conceptCount} label="Concepts" />
+        <StatCard value={sessions.length} label="Sessions" />
+        <StatCard value={skill.assessmentAvailable ? 'Ready' : 'Not yet'} label="Assessment" />
+      </div>
 
-      <h3>Recent Sessions</h3>
-      {sessions.length === 0 ? (
-        <p className="SkillDetailScreen__empty">No sessions yet. Start training!</p>
-      ) : (
-        <div className="SkillDetailScreen__sessions">
-          {sessions.map(sess => (
-            <Card
-              key={sess._id}
-              hoverable
-              onClick={() => navigate(`/train/${skill._id}/${sess._id}`)}
-            >
-              <div className="SkillDetailScreen__session">
-                <span>{sess.type}</span>
-                <span className="SkillDetailScreen__sessionDate">
-                  {new Date(sess.date).toLocaleDateString()}
-                </span>
-                <span className={`SkillDetailScreen__sessionStatus SkillDetailScreen__sessionStatus--${sess.status}`}>
-                  {sess.status}
-                </span>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+      <ConceptList concepts={skill.concepts} />
+
+      <SessionList
+        sessions={sessions}
+        skillId={skill._id}
+        onSessionClick={(sessionId) => navigate(`/train/${skill._id}/${sessionId}`)}
+        onDelete={handleDeleteSession}
+      />
+
+      <div className="SkillDetailScreen__danger">
+        <Button variant="danger" onClick={() => setDeleteDialogOpen(true)}>
+          Delete Skill
+        </Button>
+      </div>
+
+      <BeltInfoModal
+        open={beltModalOpen}
+        onClose={() => setBeltModalOpen(false)}
+        skillId={skill._id}
+      />
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="Delete Skill"
+        message="This will permanently delete this skill and all associated sessions, belt history, and progress. This cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleDeleteSkill}
+        onCancel={() => setDeleteDialogOpen(false)}
+      />
     </div>
   );
 }

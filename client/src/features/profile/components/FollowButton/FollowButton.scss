@@ -1,0 +1,10 @@
+@use '../../../../styles/variables' as *;
+
+.FollowButton {
+  min-width: 100px;
+
+  &--following:hover {
+    border-color: $colorDanger;
+    color: $colorDanger;
+  }
+}

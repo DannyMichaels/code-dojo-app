@@ -1,0 +1,31 @@
+@use '../../../../styles/variables' as *;
+
+.AvatarUpload {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity $transition-default;
+  }
+
+  &:hover &__overlay {
+    opacity: 1;
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+  }
+
+  &__input {
+    display: none;
+  }
+}

@@ -1,0 +1,41 @@
+@use '../../../../styles/variables' as *;
+
+.ActivityCard {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $background-color-alt;
+  border-radius: $radius-md;
+
+  &__avatar {
+    flex-shrink: 0;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__text {
+    margin: 0;
+    line-height: 1.4;
+    font-size: 0.9375rem;
+  }
+
+  &__username {
+    font-weight: 600;
+    color: $primaryColorWhite;
+    text-decoration: none;
+
+    &:hover {
+      color: $primaryColor;
+    }
+  }
+
+  &__time {
+    font-size: 0.75rem;
+    color: $grayLight;
+    margin-top: $spacing-xs;
+    display: block;
+  }
+}

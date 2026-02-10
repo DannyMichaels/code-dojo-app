@@ -1,0 +1,17 @@
+@use '../../../styles/variables' as *;
+
+.StatCard {
+  text-align: center;
+
+  &__value {
+    display: block;
+    font-family: $fontFamilySecondary;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    color: $grayLight;
+  }
+}
