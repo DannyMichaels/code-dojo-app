@@ -4,6 +4,7 @@ import SkillCatalog from '../models/SkillCatalog.js';
 import { buildSystemPrompt } from '../services/promptBuilder.js';
 import { streamMessage } from '../services/anthropic.js';
 import { handleToolCall } from '../services/toolHandler.js';
+import { getSocialStats } from '../services/socialStats.js';
 import TRAINING_TOOLS from '../prompts/tools.js';
 
 // GET /api/user-skills/:skillId/sessions
@@ -99,11 +100,15 @@ export async function sendMessage(req, res, next) {
     session.messages.push({ role: 'user', content });
     await session.save();
 
+    // Get social stats for prompt
+    const socialStats = await getSocialStats(userSkill.skillCatalogId);
+
     // Build system prompt
     const systemPrompt = buildSystemPrompt({
       skillCatalog,
       userSkill,
       sessionType: session.type,
+      socialStats,
     });
 
     // Set up SSE

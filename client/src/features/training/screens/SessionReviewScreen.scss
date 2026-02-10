@@ -1,0 +1,120 @@
+@use '../../../styles/variables' as *;
+
+.SessionReviewScreen {
+  max-width: 800px;
+  margin: 0 auto;
+
+  &--loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+  }
+
+  &__header {
+    margin-bottom: $spacing-lg;
+
+    h2 {
+      font-family: $fontFamilySecondary;
+      margin: 0 0 $spacing-sm;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    gap: $spacing-md;
+    align-items: center;
+  }
+
+  &__type {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: $radius-sm;
+    color: $grayLight;
+  }
+
+  &__date {
+    font-size: 0.8125rem;
+    color: $grayLight;
+  }
+
+  &__status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+
+    &--completed { color: $colorSuccess; }
+    &--active { color: $primaryColor; }
+    &--abandoned { color: $grayLight; }
+  }
+
+  &__evaluation {
+    display: flex;
+    gap: $spacing-lg;
+    padding: $spacing-md;
+    background: $background-color-alt;
+    border-radius: $radius-sm;
+    margin-bottom: $spacing-lg;
+    font-size: 0.875rem;
+    text-transform: capitalize;
+  }
+
+  &__observations {
+    margin-bottom: $spacing-lg;
+
+    h3 {
+      font-family: $fontFamilySecondary;
+      font-size: 1rem;
+      margin-bottom: $spacing-sm;
+    }
+  }
+
+  &__obs {
+    padding: $spacing-sm $spacing-md;
+    border-left: 3px solid $grayMid;
+    margin-bottom: $spacing-xs;
+    background: $background-color-alt;
+    border-radius: 0 $radius-sm $radius-sm 0;
+
+    &--positive { border-left-color: $colorSuccess; }
+    &--minor { border-left-color: $grayLight; }
+    &--moderate { border-left-color: #f0ad4e; }
+    &--significant { border-left-color: $colorDanger; }
+  }
+
+  &__obsType {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $grayLight;
+    margin-right: $spacing-sm;
+  }
+
+  &__obsConcept {
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  &__obsNote {
+    font-size: 0.8125rem;
+    color: $grayLight;
+    margin: $spacing-xs 0 0;
+  }
+
+  &__messages {
+    h3 {
+      font-family: $fontFamilySecondary;
+      font-size: 1rem;
+      margin-bottom: $spacing-sm;
+    }
+  }
+
+  &__empty {
+    color: $grayLight;
+    text-align: center;
+    padding: $spacing-xl;
+  }
+}

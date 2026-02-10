@@ -44,6 +44,12 @@ export default function AppLayout() {
           )}
         </nav>
         <div className="AppLayout__user">
+          <Link
+            to="/settings"
+            className={`AppLayout__link ${location.pathname === '/settings' ? 'AppLayout__link--active' : ''}`}
+          >
+            Settings
+          </Link>
           <span className="AppLayout__username">{user?.name || user?.username || user?.email}</span>
           <button className="AppLayout__logout" onClick={logout}>
             Logout

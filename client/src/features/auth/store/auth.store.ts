@@ -12,6 +12,7 @@ interface AuthStore {
   login: (data: LoginInput) => Promise<void>;
   register: (data: RegisterInput) => Promise<void>;
   fetchMe: () => Promise<void>;
+  setUser: (user: User) => void;
   logout: () => void;
   clearError: () => void;
 }
@@ -64,6 +65,8 @@ const useAuthStore = create<AuthStore>()(
             localStorage.removeItem('__dojo-auth-token');
           }
         },
+
+        setUser: (user) => set({ user }),
 
         logout: () => {
           localStorage.removeItem('__dojo-auth-token');

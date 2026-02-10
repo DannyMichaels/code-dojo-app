@@ -1,0 +1,98 @@
+@use '../../../styles/variables' as *;
+
+.PublicProfileScreen {
+  max-width: 700px;
+  margin: 0 auto;
+
+  &--loading,
+  &--error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: $grayLight;
+  }
+
+  &__header {
+    display: flex;
+    gap: $spacing-lg;
+    margin-bottom: $spacing-xl;
+  }
+
+  &__avatar,
+  &__avatarFallback {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__avatar {
+    object-fit: cover;
+  }
+
+  &__avatarFallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $primaryColor;
+    color: $primaryColorWhite;
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: $fontFamilySecondary;
+  }
+
+  &__info {
+    h1 {
+      font-family: $fontFamilySecondary;
+      margin: 0 0 $spacing-xs;
+    }
+  }
+
+  &__username {
+    color: $grayLight;
+    font-size: 0.875rem;
+  }
+
+  &__bio {
+    margin: $spacing-sm 0;
+    color: $grayLight;
+    line-height: 1.5;
+  }
+
+  &__joined {
+    font-size: 0.8125rem;
+    color: $grayLight;
+  }
+
+  &__sectionTitle {
+    font-family: $fontFamilySecondary;
+    font-size: 1.125rem;
+    margin-bottom: $spacing-md;
+  }
+
+  &__empty {
+    color: $grayLight;
+    text-align: center;
+    padding: $spacing-xl;
+  }
+
+  &__skills {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__skillCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-sm $spacing-md;
+    background: $background-color-alt;
+    border-radius: $radius-sm;
+  }
+
+  &__skillName {
+    font-weight: 600;
+  }
+}

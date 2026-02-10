@@ -67,9 +67,21 @@ export async function getMe(req, res, next) {
 export async function updateMe(req, res, next) {
   try {
     const updates = {};
-    const { name, preferences } = req.body;
+    const { name, username, bio, avatarUrl, preferences } = req.body;
 
     if (name !== undefined) updates.name = name;
+    if (bio !== undefined) updates.bio = bio;
+    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+
+    if (username !== undefined) {
+      // Check uniqueness
+      const existing = await User.findOne({ username: username.toLowerCase(), _id: { $ne: req.userId } });
+      if (existing) {
+        return res.status(409).json({ error: 'Username already taken' });
+      }
+      updates.username = username.toLowerCase();
+    }
+
     if (preferences) {
       if (preferences.sessionLength) updates['preferences.sessionLength'] = preferences.sessionLength;
       if (preferences.difficultyPreference) updates['preferences.difficultyPreference'] = preferences.difficultyPreference;

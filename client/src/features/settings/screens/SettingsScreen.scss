@@ -1,0 +1,89 @@
+@use '../../../styles/variables' as *;
+
+.SettingsScreen {
+  max-width: 600px;
+  margin: 0 auto;
+
+  &__title {
+    font-family: $fontFamilySecondary;
+    margin-bottom: $spacing-xl;
+  }
+
+  &__message {
+    padding: $spacing-sm $spacing-md;
+    border-radius: $radius-sm;
+    margin-bottom: $spacing-md;
+    font-size: 0.875rem;
+
+    &--success {
+      background: rgba($colorSuccess, 0.15);
+      color: $colorSuccess;
+    }
+
+    &--error {
+      background: rgba($colorDanger, 0.15);
+      color: $colorDanger;
+    }
+  }
+
+  &__section {
+    margin-bottom: $spacing-xl;
+
+    h3 {
+      font-family: $fontFamilySecondary;
+      font-size: 1rem;
+      margin-bottom: $spacing-md;
+      padding-bottom: $spacing-xs;
+      border-bottom: 1px solid $grayMid;
+    }
+  }
+
+  &__field {
+    margin-bottom: $spacing-md;
+
+    label {
+      display: block;
+      font-size: 0.8125rem;
+      color: $grayLight;
+      margin-bottom: $spacing-xs;
+    }
+  }
+
+  &__textarea {
+    width: 100%;
+    background: $background-color-alt;
+    border: 1px solid $grayMid;
+    border-radius: $radius-sm;
+    color: $primaryColorWhite;
+    padding: $spacing-sm;
+    font-family: inherit;
+    font-size: 0.875rem;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: $primaryColor;
+    }
+  }
+
+  &__select {
+    width: 100%;
+    background: $background-color-alt;
+    border: 1px solid $grayMid;
+    border-radius: $radius-sm;
+    color: $primaryColorWhite;
+    padding: $spacing-sm;
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: $primaryColor;
+    }
+
+    option {
+      background: $background-color-alt;
+      color: $primaryColorWhite;
+    }
+  }
+}
