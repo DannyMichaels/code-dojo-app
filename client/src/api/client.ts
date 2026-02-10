@@ -15,7 +15,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url || '';
+    const isAuthRoute = url.startsWith('/auth/login') || url.startsWith('/auth/register');
+
+    if (error.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem('__dojo-auth-token');
       localStorage.removeItem('__dojo-auth-storage');
       window.location.href = '/login';

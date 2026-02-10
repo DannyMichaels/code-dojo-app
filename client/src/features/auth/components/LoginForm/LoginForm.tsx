@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import Button from '../../../../components/shared/Button';
-import Input from '../../../../components/shared/Input';
-import useAuthStore from '../../store/auth.store';
-import { loginSchema, type LoginInput } from '../../schemas/auth.schema';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Button from "../../../../components/shared/Button";
+import Input from "../../../../components/shared/Input";
+import useAuthStore from "../../store/auth.store";
+import { loginSchema, type LoginInput } from "../../schemas/auth.schema";
 
 export default function LoginForm() {
   const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuthStore();
-  const [form, setForm] = useState<LoginInput>({ email: '', password: '' });
+  const [form, setForm] = useState<LoginInput>({ email: "", password: "" });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setFieldErrors({ ...fieldErrors, [e.target.name]: '' });
+    setFieldErrors({ ...fieldErrors, [e.target.name]: "" });
     clearError();
   };
 
@@ -33,35 +33,35 @@ export default function LoginForm() {
 
     try {
       await login(result.data);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch {
       // error handled by store
     }
   };
 
   return (
-    <form className="Form" onSubmit={ handleSubmit }>
+    <form className="Form" onSubmit={handleSubmit}>
       <h2 className="Form__title">Welcome Back</h2>
-      { error && <div className="Form__error">{ error }</div> }
+      {error && <div className="Form__error">{error}</div>}
       <Input
         name="email"
         type="email"
         label="Email"
         placeholder="you@example.com"
-        value={ form.email }
-        onChange={ handleChange }
-        error={ fieldErrors.email }
+        value={form.email}
+        onChange={handleChange}
+        error={fieldErrors.email}
       />
       <Input
         name="password"
         type="password"
         label="Password"
         placeholder="Your password"
-        value={ form.password }
-        onChange={ handleChange }
-        error={ fieldErrors.password }
+        value={form.password}
+        onChange={handleChange}
+        error={fieldErrors.password}
       />
-      <Button type="submit" fullWidth loading={ loading }>
+      <Button type="submit" fullWidth loading={loading}>
         Sign In
       </Button>
       <p className="Form__footer">

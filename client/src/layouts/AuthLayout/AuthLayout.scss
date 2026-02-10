@@ -3,6 +3,7 @@
 .AuthLayout {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: $spacing-md;
@@ -18,10 +19,21 @@
   }
 
   &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-sm;
     font-family: $fontFamilySecondary;
     font-size: 2rem;
     color: $primaryColor;
     text-align: center;
     margin-bottom: $spacing-lg;
+  }
+
+  &__footer {
+    margin-top: $spacing-lg;
+    font-size: 0.75rem;
+    color: $grayLight;
+    text-align: center;
   }
 }

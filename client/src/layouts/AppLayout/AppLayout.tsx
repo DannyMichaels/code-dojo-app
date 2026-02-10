@@ -3,6 +3,7 @@ import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { Rss, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import useAuthStore from '../../features/auth/store/auth.store';
 import useSkillStore from '../../features/skills/store/skill.store';
+import { APP_NAME, BrandIcon } from '../../constants/app';
 import Avatar from '../../components/shared/Avatar';
 import SkillIcon from '../../components/shared/SkillIcon';
 import UserSearchBar from '../../features/social/components/UserSearchBar';
@@ -38,7 +39,10 @@ export default function AppLayout() {
       </button>
       {sidebarOpen && <div className="AppLayout__overlay" onClick={() => setSidebarOpen(false)} />}
       <aside className={`AppLayout__sidebar ${sidebarOpen ? 'AppLayout__sidebar--open' : ''}`}>
-        <div className="AppLayout__brand">Code Dojo</div>
+        <div className="AppLayout__brand">
+          <BrandIcon size={24} />
+          {APP_NAME}
+        </div>
         <nav className="AppLayout__nav">
           <Link
             to="/feed"
