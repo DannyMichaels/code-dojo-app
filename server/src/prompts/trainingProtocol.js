@@ -46,6 +46,6 @@ Use your tools actively during sessions:
 - \`queue_reinforcement\`: When a concept needs more practice in future sessions
 - \`complete_session\`: When the training problem has been fully evaluated
 - \`set_training_context\`: During onboarding, after understanding the skill
-- \`present_problem\`: To structure the challenge with targeted concepts`;
+- \`present_problem\`: To record problem metadata (concepts, belt level, starter code). IMPORTANT: This tool does NOT display anything to the student. You MUST also write the full problem in your chat response.`;
 
 export default TRAINING_PROTOCOL;

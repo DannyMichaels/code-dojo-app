@@ -1,0 +1,144 @@
+@use '../../../../styles/variables' as *;
+
+.MessageBubble {
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-xs;
+
+  &--user {
+    .MessageBubble__label {
+      color: $primaryColor;
+    }
+  }
+
+  &--assistant {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: $radius-sm;
+
+    .MessageBubble__label {
+      color: $colorSuccess;
+    }
+  }
+
+  &--system {
+    .MessageBubble__label {
+      color: $grayLight;
+    }
+
+    .MessageBubble__content {
+      font-style: italic;
+      color: $grayLight;
+    }
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+
+  &__content {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    word-break: break-word;
+
+    // Markdown rendered content (assistant messages)
+    p {
+      margin: 0 0 $spacing-sm;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    h1, h2, h3, h4 {
+      margin: $spacing-md 0 $spacing-sm;
+      color: $primaryColorWhite;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    h1 { font-size: 1.25rem; }
+    h2 { font-size: 1.125rem; }
+    h3 { font-size: 1rem; }
+    h4 { font-size: 0.875rem; }
+
+    code {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: $radius-sm;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8125rem;
+    }
+
+    pre {
+      margin: $spacing-sm 0;
+      border-radius: $radius-md;
+      overflow-x: auto;
+
+      > code {
+        display: block;
+        background: #1e1e1e;
+        padding: $spacing-md;
+        border-radius: $radius-md;
+        overflow-x: auto;
+        white-space: pre;
+      }
+    }
+
+    strong {
+      color: $primaryColorWhite;
+    }
+
+    ul, ol {
+      margin: $spacing-sm 0;
+      padding-left: $spacing-lg;
+    }
+
+    li {
+      margin-bottom: $spacing-xs;
+    }
+
+    blockquote {
+      margin: $spacing-sm 0;
+      padding: $spacing-sm $spacing-md;
+      border-left: 3px solid $primaryColor;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 0 $radius-sm $radius-sm 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: $spacing-sm 0;
+
+      th, td {
+        padding: $spacing-xs $spacing-sm;
+        border: 1px solid $grayMid;
+        text-align: left;
+      }
+
+      th {
+        background: rgba(255, 255, 255, 0.05);
+        font-weight: 600;
+      }
+    }
+
+    a {
+      color: $primaryColor;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // User messages keep pre-wrap for plain text
+  &--user &__content {
+    white-space: pre-wrap;
+  }
+}

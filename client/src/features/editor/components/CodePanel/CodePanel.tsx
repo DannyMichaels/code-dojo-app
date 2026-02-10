@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import CodeEditor from './CodeEditor';
-import LanguageSelector from './LanguageSelector';
-import Button from '../../../components/shared/Button';
+import { useEffect, useState } from 'react';
+import CodeEditor from '../CodeEditor';
+import LanguageSelector from '../LanguageSelector';
+import Button from '../../../../components/shared/Button';
 import './CodePanel.scss';
 
 interface CodePanelProps {
@@ -14,6 +14,13 @@ interface CodePanelProps {
 export default function CodePanel({ language: initialLang = 'javascript', starterCode = '', onSubmit, submitting }: CodePanelProps) {
   const [code, setCode] = useState(starterCode);
   const [language, setLanguage] = useState(initialLang);
+
+  // Sync editor when starter code arrives from tool events
+  useEffect(() => {
+    if (starterCode) {
+      setCode(starterCode);
+    }
+  }, [starterCode]);
 
   return (
     <div className="CodePanel">

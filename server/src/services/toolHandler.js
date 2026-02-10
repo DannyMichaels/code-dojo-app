@@ -2,6 +2,7 @@ import Session from '../models/Session.js';
 import UserSkill from '../models/UserSkill.js';
 import SkillCatalog from '../models/SkillCatalog.js';
 import { promoteBelt, failAssessment, checkAssessmentEligibility } from './assessmentService.js';
+import { computeMastery } from './masteryCalc.js';
 
 /**
  * Process a tool call from Claude and write results to MongoDB.
@@ -75,8 +76,7 @@ async function handleUpdateMastery(input, { sessionId, skillId }) {
     existing.streak = 0;
   }
 
-  // Simple mastery calculation (Phase 4 will have the full formula)
-  existing.mastery = Math.min(1, existing.successCount / Math.max(existing.exposureCount, 1));
+  existing.mastery = computeMastery(existing);
 
   if (input.context && !existing.contexts.includes(input.context)) {
     existing.contexts.push(input.context);

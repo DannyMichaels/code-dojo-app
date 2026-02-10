@@ -59,8 +59,11 @@ export function computeMastery(concept) {
     observationPenalty += penalty;
   }
 
+  // 6. Exposure confidence — can't be confident with few data points
+  const confidenceFactor = 1 - 0.2 / concept.exposureCount;
+
   // Composite mastery
-  const raw = (baseRatio + streakBonus + contextBonus) * decayFactor - observationPenalty;
+  const raw = (baseRatio + streakBonus + contextBonus) * decayFactor * confidenceFactor - observationPenalty;
   return Math.max(0, Math.min(1, raw));
 }
 

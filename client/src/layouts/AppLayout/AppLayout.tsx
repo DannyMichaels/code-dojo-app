@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
-import useAuthStore from '../features/auth/store/auth.store';
-import useSkillStore from '../features/skills/store/skill.store';
+import useAuthStore from '../../features/auth/store/auth.store';
+import useSkillStore from '../../features/skills/store/skill.store';
 import './AppLayout.scss';
 
 export default function AppLayout() {

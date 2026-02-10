@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import Button from '../../../components/shared/Button';
+import Button from '../../../../components/shared/Button';
 import './ChatInput.scss';
 
 interface ChatInputProps {

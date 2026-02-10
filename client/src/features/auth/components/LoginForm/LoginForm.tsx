@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import Button from '../../../components/shared/Button';
-import Input from '../../../components/shared/Input';
-import useAuthStore from '../store/auth.store';
-import { registerSchema, type RegisterInput } from '../schemas/auth.schema';
+import Button from '../../../../components/shared/Button';
+import Input from '../../../../components/shared/Input';
+import useAuthStore from '../../store/auth.store';
+import { loginSchema, type LoginInput } from '../../schemas/auth.schema';
 
-export default function RegisterForm() {
+export default function LoginForm() {
   const navigate = useNavigate();
-  const { register, loading, error, clearError } = useAuthStore();
-  const [form, setForm] = useState<RegisterInput>({ email: '', password: '', username: '' });
+  const { login, loading, error, clearError } = useAuthStore();
+  const [form, setForm] = useState<LoginInput>({ email: '', password: '' });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,7 +21,7 @@ export default function RegisterForm() {
     e.preventDefault();
     setFieldErrors({});
 
-    const result = registerSchema.safeParse(form);
+    const result = loginSchema.safeParse(form);
     if (!result.success) {
       const errors: Record<string, string> = {};
       result.error.errors.forEach((err) => {
@@ -32,7 +32,7 @@ export default function RegisterForm() {
     }
 
     try {
-      await register(result.data);
+      await login(result.data);
       navigate('/dashboard');
     } catch {
       // error handled by store
@@ -41,16 +41,8 @@ export default function RegisterForm() {
 
   return (
     <form className="Form" onSubmit={ handleSubmit }>
-      <h2 className="Form__title">Create Account</h2>
+      <h2 className="Form__title">Welcome Back</h2>
       { error && <div className="Form__error">{ error }</div> }
-      <Input
-        name="username"
-        label="Username"
-        placeholder="your-username"
-        value={ form.username }
-        onChange={ handleChange }
-        error={ fieldErrors.username }
-      />
       <Input
         name="email"
         type="email"
@@ -64,16 +56,16 @@ export default function RegisterForm() {
         name="password"
         type="password"
         label="Password"
-        placeholder="At least 8 characters"
+        placeholder="Your password"
         value={ form.password }
         onChange={ handleChange }
         error={ fieldErrors.password }
       />
       <Button type="submit" fullWidth loading={ loading }>
-        Create Account
+        Sign In
       </Button>
       <p className="Form__footer">
-        Already have an account? <Link to="/login">Sign in</Link>
+        Don't have an account? <Link to="/register">Sign up</Link>
       </p>
     </form>
   );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import Button from '../../../components/shared/Button';
-import Input from '../../../components/shared/Input';
-import useSkillStore from '../store/skill.store';
+import Button from '../../../../components/shared/Button';
+import Input from '../../../../components/shared/Input';
+import useSkillStore from '../../store/skill.store';
 import './AddSkillDialog.scss';
 
 interface AddSkillDialogProps {

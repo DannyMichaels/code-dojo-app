@@ -1,4 +1,6 @@
-import type { SessionMessage } from '../types/session.types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import type { SessionMessage } from '../../types/session.types';
 import './MessageBubble.scss';
 
 interface MessageBubbleProps {
@@ -12,7 +14,9 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
         {message.role === 'user' ? 'You' : 'Sensei'}
       </div>
       <div className="MessageBubble__content">
-        {message.content}
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {message.content}
+          </ReactMarkdown>  
       </div>
     </div>
   );

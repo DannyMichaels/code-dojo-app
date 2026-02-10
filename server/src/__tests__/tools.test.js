@@ -92,7 +92,7 @@ describe('update_mastery', () => {
 
     expect(result.success).toBe(true);
     expect(result.concept).toBe('array_methods');
-    expect(result.mastery).toBe(1); // 1/1
+    expect(result.mastery).toBeCloseTo(0.84, 1); // computeMastery: dampened by confidence factor, not 100%
 
     const updated = await UserSkill.findById(skill._id);
     const concept = updated.concepts.get('array_methods');
@@ -117,7 +117,7 @@ describe('update_mastery', () => {
       { sessionId: session._id, skillId: skill._id, userId: user._id }
     );
 
-    expect(result.mastery).toBe(0.5); // 1/2
+    expect(result.mastery).toBeCloseTo(0.45, 2); // computeMastery: base 0.5, no streak, confidence factor 0.9
 
     const updated = await UserSkill.findById(skill._id);
     const concept = updated.concepts.get('recursion');
@@ -133,7 +133,7 @@ describe('update_mastery', () => {
     );
 
     const updated = await Session.findById(session._id);
-    expect(updated.masteryUpdates.get('closures')).toBe('100%');
+    expect(updated.masteryUpdates.get('closures')).toBe('82%');
   });
 
   it('returns error for non-existent skill', async () => {

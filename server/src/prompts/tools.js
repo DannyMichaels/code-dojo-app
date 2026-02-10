@@ -123,7 +123,7 @@ export const TRAINING_TOOLS = [
   },
   {
     name: 'present_problem',
-    description: 'Present a training problem to the student. Use this to structure the challenge.',
+    description: 'Record a training problem\'s metadata (concepts targeted, belt level, starter code). IMPORTANT: This tool does NOT display anything to the student — you MUST also include the full problem in your chat response.',
     input_schema: {
       type: 'object',
       properties: {

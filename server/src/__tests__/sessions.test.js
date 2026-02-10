@@ -1,7 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
+import { streamMessage } from '../services/anthropic.js';
 import app from '../app.js';
+import Session from '../models/Session.js';
 import { createTestUser, createTestUserWithSkill } from './helpers.js';
+
+// Mock the anthropic module — vi.mock is hoisted before imports
+vi.mock('../services/anthropic.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    streamMessage: vi.fn(original.streamMessage),
+  };
+});
 
 let token;
 let skillId;
@@ -11,6 +22,8 @@ describe('Sessions API', () => {
     const setup = await createTestUserWithSkill('javascript');
     token = setup.token;
     skillId = setup.skillId;
+    // Reset mock between tests — clears mockImplementation but keeps it as a vi.fn
+    streamMessage.mockReset();
   });
 
   it('POST should create a session', async () => {
@@ -83,5 +96,58 @@ describe('Sessions API', () => {
       .send({ type: 'training' });
 
     expect(res.status).toBe(404);
+  });
+
+  it('should persist AI response after tool-use iterations', async () => {
+    // Create a session
+    const createRes = await request(app)
+      .post(`/api/user-skills/${skillId}/sessions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ type: 'training' });
+    const sid = createRes.body.session._id;
+
+    // Mock streamMessage to simulate: iteration 1 returns tool call + text,
+    // iteration 2 returns only text (no tools, exits loop)
+    let callCount = 0;
+    streamMessage.mockImplementation(async ({ onText, onToolUse }) => {
+      callCount++;
+      if (callCount === 1) {
+        // First iteration: text + tool call
+        if (onText) onText('Let me analyze your code.');
+        const toolCall = {
+          id: 'tool_1',
+          type: 'tool_use',
+          name: 'record_observation',
+          input: { type: 'breakthrough', concept: 'test', note: 'Great pattern', severity: 'positive' },
+        };
+        if (onToolUse) onToolUse(toolCall);
+        return {
+          text: 'Let me analyze your code.',
+          toolCalls: [toolCall],
+          response: { content: [{ type: 'text', text: 'Let me analyze your code.' }, toolCall] },
+        };
+      } else {
+        // Second iteration: text only, no tools → exits loop
+        if (onText) onText('Great work on this exercise!');
+        return {
+          text: 'Great work on this exercise!',
+          toolCalls: [],
+          response: { content: [{ type: 'text', text: 'Great work on this exercise!' }] },
+        };
+      }
+    });
+
+    // Send a message via the SSE endpoint
+    await request(app)
+      .post(`/api/user-skills/${skillId}/sessions/${sid}/messages`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ content: 'Here is my solution' });
+
+    // Verify the full response from BOTH iterations was persisted
+    const updated = await Session.findById(sid);
+    const assistantMessages = updated.messages.filter(m => m.role === 'assistant');
+    expect(assistantMessages).toHaveLength(1);
+    expect(assistantMessages[0].content).toContain('Let me analyze your code.');
+    expect(assistantMessages[0].content).toContain('Great work on this exercise!');
   });
 });

@@ -122,7 +122,7 @@ This is the student's first session with this skill.
 Instructions:
 1. Welcome them briefly — don't be verbose
 2. Do NOT ask them to self-assess their level — observe it through challenges
-3. Present 3-5 graduated challenges, starting simple and increasing
+3. Present 3-5 graduated challenges, starting simple and increasing. Call \`present_problem\` to record metadata for each challenge, but ALSO write the full problem in your chat message — the tool does NOT display anything to the student
 4. After each response, use \`record_observation\` and \`update_mastery\` tools
 5. Based on all responses, determine their starting belt level
 6. Use \`set_training_context\` to save skill-specific training context (what makes code idiomatic, key concept areas, common anti-patterns, evaluation criteria)
@@ -165,7 +165,7 @@ Regular training session.
 Instructions:
 1. Review the suggested focus concepts above (if any)
 2. Generate a fresh challenge that targets concepts needing reinforcement or new contexts
-3. Present the problem using \`present_problem\` tool
+3. Call \`present_problem\` tool to record the problem metadata, then ALSO write the full problem description in your response text. The tool records data — it does NOT display anything to the student. You must always include the complete problem in your chat message
 4. The problem should feel like a real problem, not a textbook exercise
 5. Don't hint at which concepts are being tested
 6. After the student submits, evaluate their solution:

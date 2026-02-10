@@ -7,9 +7,10 @@ interface UseChatOptions {
   sessionId: string;
   initialMessages?: SessionMessage[];
   maxRetries?: number;
+  onToolUse?: (tool: string, input: Record<string, unknown>) => void;
 }
 
-export default function useChat({ skillId, sessionId, initialMessages = [], maxRetries = 2 }: UseChatOptions) {
+export default function useChat({ skillId, sessionId, initialMessages = [], maxRetries = 2, onToolUse }: UseChatOptions) {
   const [messages, setMessages] = useState<SessionMessage[]>(initialMessages);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,8 +69,8 @@ export default function useChat({ skillId, sessionId, initialMessages = [], maxR
           return updated;
         });
       },
-      (_tool, _input) => {
-        // Tool use events
+      (tool, input) => {
+        onToolUse?.(tool, input);
       },
       () => {
         setStreaming(false);

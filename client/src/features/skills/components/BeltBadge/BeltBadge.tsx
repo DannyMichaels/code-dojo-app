@@ -1,4 +1,4 @@
-import type { Belt } from '../types/skill.types';
+import type { Belt } from '../../types/skill.types';
 import './BeltBadge.scss';
 
 const BELT_COLORS: Record<Belt, string> = {

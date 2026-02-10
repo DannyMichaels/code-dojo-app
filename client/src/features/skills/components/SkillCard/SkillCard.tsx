@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import Card from '../../../components/shared/Card';
-import BeltBadge from './BeltBadge';
-import type { UserSkill } from '../types/skill.types';
+import Card from '../../../../components/shared/Card';
+import BeltBadge from '../BeltBadge';
+import type { UserSkill } from '../../types/skill.types';
 import './SkillCard.scss';
 
 interface SkillCardProps {

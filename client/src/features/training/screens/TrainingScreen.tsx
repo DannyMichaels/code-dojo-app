@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ChatPanel from '../components/ChatPanel';
 import CodePanel from '../../editor/components/CodePanel';
@@ -18,6 +18,19 @@ export default function TrainingScreen() {
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [starterCode, setStarterCode] = useState('');
+  const [editorLanguage, setEditorLanguage] = useState<string | undefined>(undefined);
+
+  const handleToolUse = useCallback((tool: string, input: Record<string, unknown>) => {
+    if (tool === 'present_problem') {
+      if (typeof input.starter_code === 'string' && input.starter_code) {
+        setStarterCode(input.starter_code);
+      }
+      if (typeof input.language === 'string' && input.language) {
+        setEditorLanguage(input.language);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!skillId) return;
@@ -50,6 +63,7 @@ export default function TrainingScreen() {
     skillId: skillId || '',
     sessionId: session?._id || '',
     initialMessages: session?.messages || [],
+    onToolUse: handleToolUse,
   });
 
   useEffect(() => {
@@ -105,8 +119,8 @@ export default function TrainingScreen() {
         </div>
         <div className="TrainingScreen__editorPane">
           <CodePanel
-            language={session?.solution?.language || catalogName.toLowerCase()}
-            starterCode=""
+            language={editorLanguage || session?.solution?.language || catalogName.toLowerCase()}
+            starterCode={starterCode}
             onSubmit={handleSubmitSolution}
             submitting={submitting || chat.streaming}
           />

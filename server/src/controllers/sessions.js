@@ -173,8 +173,7 @@ export async function sendMessage(req, res, next) {
           { role: 'user', content: toolResults },
         ];
 
-        // Reset text for next iteration (tool calls may produce more text)
-        fullTextResponse = '';
+        // Text continues accumulating via onText callback across iterations
       }
 
       // Save the full text response as assistant message

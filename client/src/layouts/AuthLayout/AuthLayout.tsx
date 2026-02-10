@@ -1,5 +1,5 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import useAuthStore from '../features/auth/store/auth.store';
+import useAuthStore from '../../features/auth/store/auth.store';
 import './AuthLayout.scss';
 
 export default function AuthLayout() {

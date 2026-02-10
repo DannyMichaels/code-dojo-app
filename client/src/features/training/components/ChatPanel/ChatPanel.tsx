@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import MessageBubble from './MessageBubble';
-import ChatInput from './ChatInput';
-import Spinner from '../../../components/shared/Spinner';
-import type { SessionMessage } from '../types/session.types';
+import MessageBubble from '../MessageBubble';
+import ChatInput from '../ChatInput';
+import Spinner from '../../../../components/shared/Spinner';
+import type { SessionMessage } from '../../types/session.types';
 import './ChatPanel.scss';
 
 interface ChatPanelProps {
