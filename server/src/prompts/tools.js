@@ -148,7 +148,7 @@ export const TRAINING_TOOLS = [
   },
   {
     name: 'present_problem',
-    description: 'Record a training problem\'s metadata (concepts targeted, belt level, starter code). IMPORTANT: This tool does NOT display anything to the student — you MUST also include the full problem in your chat response.',
+    description: 'Record a training problem\'s metadata AND populate the student\'s code editor. IMPORTANT: You MUST also include the full problem in your chat response. The starter_code and language fields are sent directly to the student\'s code editor — always include them so the editor is pre-filled with the starter code in the correct language.',
     input_schema: {
       type: 'object',
       properties: {
@@ -168,14 +168,14 @@ export const TRAINING_TOOLS = [
         },
         starter_code: {
           type: 'string',
-          description: 'Optional starter code for the student',
+          description: 'Starter code that will be loaded into the student\'s code editor. Always provide this so the student can start coding immediately.',
         },
         language: {
           type: 'string',
-          description: 'The programming language for this problem',
+          description: 'The programming language — sets the editor\'s syntax highlighting (e.g. "ruby", "python", "javascript")',
         },
       },
-      required: ['prompt', 'concepts_targeted', 'belt_level'],
+      required: ['prompt', 'concepts_targeted', 'belt_level', 'starter_code', 'language'],
     },
   },
 ];

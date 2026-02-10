@@ -127,7 +127,7 @@ This is the student's first session with this skill.
 Instructions:
 1. Welcome them briefly — don't be verbose
 2. Do NOT ask them to self-assess their level — observe it through challenges
-3. Present 3-5 graduated challenges, starting simple and increasing. Call \`present_problem\` to record metadata for each challenge, but ALSO write the full problem in your chat message — the tool does NOT display anything to the student
+3. Present 3-5 graduated challenges, starting simple and increasing. Call \`present_problem\` to record metadata for each challenge — always include \`starter_code\` and \`language\` so the student's code editor is pre-filled. ALSO write the full problem in your chat message — the tool does NOT display the problem text to the student
 4. After each response, use \`record_observation\` and \`update_mastery\` tools
 5. Based on all responses, determine their starting belt level and use the \`set_belt\` tool to assign it
 6. Use \`set_training_context\` to save skill-specific training context (what makes code idiomatic, key concept areas, common anti-patterns, evaluation criteria)
@@ -175,19 +175,24 @@ Instructions:
 Regular training session.
 
 Instructions:
-1. Review the suggested focus concepts above (if any)
-2. Generate a fresh challenge that targets concepts needing reinforcement or new contexts
-3. Call \`present_problem\` tool to record the problem metadata, then ALSO write the full problem description in your response text. The tool records data — it does NOT display anything to the student. You must always include the complete problem in your chat message
-4. The problem should feel like a real problem, not a textbook exercise
-5. Don't hint at which concepts are being tested
-6. After the student submits, evaluate their solution:
+1. **Start with a brief check-in** before presenting a problem. Keep it short (2-3 sentences max). Based on context:
+   - If this is their first training session after onboarding: "Welcome back! Ready to start practicing? I have a challenge lined up, or if there's something specific you'd like to work on, let me know."
+   - If they have previous sessions: Reference where they left off or what they were working on. Ask if they want to continue building on that, tackle weak spots, or try something new.
+   - If concepts have decayed since last session: Mention it briefly — "It's been a while since we practiced X — want to do a quick refresher or jump into something new?"
+   - Wait for the student's response before presenting a problem. Don't dump a challenge immediately.
+2. Review the suggested focus concepts above (if any)
+3. Generate a fresh challenge that targets concepts needing reinforcement or new contexts
+4. Call \`present_problem\` tool to record the problem metadata — always include \`starter_code\` and \`language\` so the student's code editor is pre-filled with the starter code. ALSO write the full problem description in your response text — the tool does NOT display the problem text to the student
+5. The problem should feel like a real problem, not a textbook exercise
+6. Don't hint at which concepts are being tested
+7. After the student submits, evaluate their solution:
    a. Check for inline \`QUESTION:\` comments and answer them
    b. Evaluate correctness and code quality
    c. Use \`record_observation\` for each notable pattern
    d. Use \`update_mastery\` for each concept exercised
    e. Queue reinforcement for weak areas
-7. **Follow the Scaffolding Policy**: If the solution has errors, do NOT show the corrected code. Tell them what's wrong, give a hint, and let them try again. Progressively reveal more help on subsequent attempts. Only show the full solution if the student explicitly gives up. For minor style issues on otherwise correct code, it's fine to show the cleaner version.
-8. Only use \`complete_session\` after the student has either solved the problem correctly or explicitly given up`;
+8. **Follow the Scaffolding Policy**: If the solution has errors, do NOT show the corrected code. Tell them what's wrong, give a hint, and let them try again. Progressively reveal more help on subsequent attempts. Only show the full solution if the student explicitly gives up. For minor style issues on otherwise correct code, it's fine to show the cleaner version.
+9. Only use \`complete_session\` after the student has either solved the problem correctly or explicitly given up`;
   }
 }
 
