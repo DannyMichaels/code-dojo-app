@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
+import { Rss, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import useAuthStore from '../../features/auth/store/auth.store';
 import useSkillStore from '../../features/skills/store/skill.store';
 import Avatar from '../../components/shared/Avatar';
+import SkillIcon from '../../components/shared/SkillIcon';
 import UserSearchBar from '../../features/social/components/UserSearchBar';
 import './AppLayout.scss';
 
@@ -42,12 +44,14 @@ export default function AppLayout() {
             to="/feed"
             className={`AppLayout__link ${location.pathname === '/feed' ? 'AppLayout__link--active' : ''}`}
           >
+            <Rss size={16} />
             Feed
           </Link>
           <Link
             to="/dashboard"
             className={`AppLayout__link ${location.pathname === '/dashboard' ? 'AppLayout__link--active' : ''}`}
           >
+            <LayoutDashboard size={16} />
             Dashboard
           </Link>
 
@@ -64,6 +68,7 @@ export default function AppLayout() {
                   to={`/skills/${skill._id}`}
                   className={`AppLayout__link AppLayout__link--skill ${location.pathname === `/skills/${skill._id}` ? 'AppLayout__link--active' : ''}`}
                 >
+                  <SkillIcon slug={skill.skillCatalogId?.slug || ''} size={14} />
                   {skill.skillCatalogId?.name || 'Loading...'}
                 </Link>
               ))}
@@ -92,9 +97,11 @@ export default function AppLayout() {
             to="/settings"
             className={`AppLayout__link ${location.pathname === '/settings' ? 'AppLayout__link--active' : ''}`}
           >
+            <Settings size={16} />
             Settings
           </Link>
           <button className="AppLayout__logout" onClick={logout}>
+            <LogOut size={16} />
             Logout
           </button>
         </div>

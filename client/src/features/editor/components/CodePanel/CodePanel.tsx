@@ -9,31 +9,48 @@ interface CodePanelProps {
   starterCode?: string;
   onSubmit: (code: string, language: string) => void;
   submitting?: boolean;
+  onPopOut?: () => void;
+  compact?: boolean;
+  /** Controlled code value — when provided, CodePanel is controlled from parent */
+  code?: string;
+  /** Callback when code changes — required when `code` is provided */
+  onCodeChange?: (code: string) => void;
 }
 
-export default function CodePanel({ language: initialLang = 'javascript', starterCode = '', onSubmit, submitting }: CodePanelProps) {
-  const [code, setCode] = useState(starterCode);
+export default function CodePanel({ language: initialLang = 'javascript', starterCode = '', onSubmit, submitting, onPopOut, compact, code: controlledCode, onCodeChange }: CodePanelProps) {
+  const isControlled = controlledCode !== undefined;
+  const [internalCode, setInternalCode] = useState(starterCode);
   const [language, setLanguage] = useState(initialLang);
 
-  // Sync editor when starter code arrives from tool events
+  const code = isControlled ? controlledCode : internalCode;
+  const setCode = isControlled ? (onCodeChange ?? (() => {})) : setInternalCode;
+
+  // Sync editor when starter code arrives from tool events (uncontrolled mode)
   useEffect(() => {
-    if (starterCode) {
-      setCode(starterCode);
+    if (starterCode && !isControlled) {
+      setInternalCode(starterCode);
     }
-  }, [starterCode]);
+  }, [starterCode, isControlled]);
 
   return (
-    <div className="CodePanel">
+    <div className={`CodePanel${compact ? ' CodePanel--compact' : ''}`}>
       <div className="CodePanel__toolbar">
         <LanguageSelector value={language} onChange={setLanguage} />
-        <Button
-          size="sm"
-          onClick={() => onSubmit(code, language)}
-          loading={submitting}
-          disabled={!code.trim()}
-        >
-          Submit Solution
-        </Button>
+        <div className="CodePanel__toolbarActions">
+          {onPopOut && (
+            <Button size="sm" variant="ghost" onClick={onPopOut}>
+              Pop out
+            </Button>
+          )}
+          <Button
+            size="sm"
+            onClick={() => onSubmit(code, language)}
+            loading={submitting}
+            disabled={!code.trim()}
+          >
+            Submit Solution
+          </Button>
+        </div>
       </div>
       <div className="CodePanel__editor">
         <CodeEditor

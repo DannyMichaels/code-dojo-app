@@ -1,0 +1,13 @@
+@use '../../../../styles/variables' as *;
+
+.ResizeHandle {
+  width: 4px;
+  cursor: col-resize;
+  background: $grayMid;
+  flex-shrink: 0;
+  transition: background $transition-default;
+
+  &:hover {
+    background: $primaryColor;
+  }
+}

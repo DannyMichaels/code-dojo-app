@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getBeltInfo } from '../../../progress/services/progress.service';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { getBeltInfo, getBeltAnalysis, promoteBelt } from '../../../progress/services/progress.service';
 import type { BeltInfo } from '../../../progress/types/progress.types';
 import Button from '../../../../components/shared/Button';
 import Spinner from '../../../../components/shared/Spinner';
@@ -9,6 +11,7 @@ interface BeltInfoModalProps {
   open: boolean;
   onClose: () => void;
   skillId: string;
+  onBeltChange?: () => void;
 }
 
 const BELT_COLORS: Record<string, string> = {
@@ -22,10 +25,15 @@ const BELT_COLORS: Record<string, string> = {
   black: '#1a1a2e',
 };
 
-export default function BeltInfoModal({ open, onClose, skillId }: BeltInfoModalProps) {
+export default function BeltInfoModal({ open, onClose, skillId, onBeltChange }: BeltInfoModalProps) {
   const [info, setInfo] = useState<BeltInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [aiReadyForPromotion, setAiReadyForPromotion] = useState(false);
+  const [promoting, setPromoting] = useState(false);
+  const [promoted, setPromoted] = useState<{ fromBelt: string; toBelt: string } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -34,6 +42,10 @@ export default function BeltInfoModal({ open, onClose, skillId }: BeltInfoModalP
     async function load() {
       setLoading(true);
       setError(null);
+      setAnalysis(null);
+      setAnalysisLoading(true);
+      setAiReadyForPromotion(false);
+      setPromoted(null);
       try {
         const data = await getBeltInfo(skillId);
         if (!cancelled) setInfo(data);
@@ -42,11 +54,37 @@ export default function BeltInfoModal({ open, onClose, skillId }: BeltInfoModalP
       } finally {
         if (!cancelled) setLoading(false);
       }
+
+      // Load AI analysis in parallel (non-blocking)
+      try {
+        const data = await getBeltAnalysis(skillId);
+        if (!cancelled) {
+          setAnalysis(data.analysis);
+          setAiReadyForPromotion(data.readyForPromotion);
+        }
+      } catch {
+        // Graceful degradation — just don't show analysis
+      } finally {
+        if (!cancelled) setAnalysisLoading(false);
+      }
     }
 
     load();
     return () => { cancelled = true; };
   }, [open, skillId]);
+
+  const handlePromote = async () => {
+    setPromoting(true);
+    try {
+      const result = await promoteBelt(skillId);
+      setPromoted(result);
+      onBeltChange?.();
+    } catch {
+      setError('Promotion failed — please try again');
+    } finally {
+      setPromoting(false);
+    }
+  };
 
   if (!open) return null;
 
@@ -131,12 +169,40 @@ export default function BeltInfoModal({ open, onClose, skillId }: BeltInfoModalP
                 <p className="BeltInfoModal__masteredNote">
                   {info.details.masteredConcepts} of {info.details.totalConcepts} concepts mastered ({'>'}0.8)
                 </p>
+
+                {promoted ? (
+                  <div className="BeltInfoModal__promoted">
+                    Promoted to {capitalize(promoted.toBelt)} belt!
+                  </div>
+                ) : aiReadyForPromotion && info.nextBelt && (
+                  <Button
+                    onClick={handlePromote}
+                    loading={promoting}
+                  >
+                    Promote to {capitalize(info.nextBelt)} Belt
+                  </Button>
+                )}
               </div>
             ) : (
               <p className="BeltInfoModal__maxBelt">You've reached the highest belt!</p>
             )}
           </>
         )}
+
+        <div className="BeltInfoModal__analysis">
+          <h4 className="BeltInfoModal__analysisTitle">AI Analysis</h4>
+          {analysisLoading && (
+            <div className="BeltInfoModal__analysisLoading">
+              <Spinner size="sm" />
+              <span>Generating analysis...</span>
+            </div>
+          )}
+          {analysis && !analysisLoading && (
+            <div className="BeltInfoModal__analysisContent">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis}</ReactMarkdown>
+            </div>
+          )}
+        </div>
 
         <div className="BeltInfoModal__actions">
           <Button variant="ghost" onClick={onClose}>Close</Button>

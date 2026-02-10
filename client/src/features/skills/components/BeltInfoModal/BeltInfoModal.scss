@@ -119,11 +119,64 @@
     margin-top: $spacing-sm;
   }
 
+  &__promoted {
+    margin-top: $spacing-sm;
+    padding: $spacing-sm $spacing-md;
+    background: rgba($colorSuccess, 0.15);
+    color: $colorSuccess;
+    border-radius: $radius-md;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+
   &__maxBelt {
     color: $primaryColor;
     font-weight: 600;
     text-align: center;
     padding: $spacing-md 0;
+  }
+
+  &__analysis {
+    border-top: 1px solid $grayMid;
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+  }
+
+  &__analysisTitle {
+    font-family: $fontFamilySecondary;
+    font-size: 1rem;
+    margin: 0 0 $spacing-sm;
+  }
+
+  &__analysisLoading {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    color: $grayLight;
+    font-size: 0.8125rem;
+    padding: $spacing-sm 0;
+  }
+
+  &__analysisContent {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: $primaryColorWhite;
+    max-height: 300px;
+    overflow-y: auto;
+
+    p {
+      margin: 0 0 $spacing-sm;
+    }
+
+    strong {
+      color: $primaryColor;
+    }
+
+    ul, ol {
+      padding-left: $spacing-lg;
+      margin: 0 0 $spacing-sm;
+    }
   }
 
   &__actions {

@@ -1,6 +1,7 @@
 import Session from '../models/Session.js';
 import UserSkill from '../models/UserSkill.js';
 import SkillCatalog from '../models/SkillCatalog.js';
+import BeltHistory from '../models/BeltHistory.js';
 import { promoteBelt, failAssessment, checkAssessmentEligibility } from './assessmentService.js';
 import { computeMastery } from './masteryCalc.js';
 import { emitBeltPromotion, emitAssessmentPassed, checkAndEmitStreakMilestone } from './activityService.js';
@@ -24,6 +25,9 @@ export async function handleToolCall(toolCall, { sessionId, skillId, userId }) {
 
     case 'complete_session':
       return handleCompleteSession(input, { sessionId, skillId });
+
+    case 'set_belt':
+      return handleSetBelt(input, { sessionId, skillId, userId });
 
     case 'set_training_context':
       return handleSetTrainingContext(input, skillId);
@@ -154,7 +158,7 @@ async function handleCompleteSession(input, { sessionId, skillId }) {
       try {
         const promotion = await promoteBelt(skillId, sessionId);
         result.promotion = promotion;
-        result.message = `Assessment passed! Promoted from ${promotion.fromBelt} to ${promotion.toBelt}!`;
+        result.message = `Assessment passed! Promoted from ${promotion.fromBelt} to ${promotion.toBelt}! You MUST now announce this to the student — celebrate the promotion, summarize their strengths, and describe what the next belt level will involve.`;
 
         // Emit activity events for belt promotion and assessment pass
         const skill = await UserSkill.findById(skillId).populate('skillCatalogId', 'name slug');
@@ -168,7 +172,10 @@ async function handleCompleteSession(input, { sessionId, skillId }) {
       }
     } else {
       await failAssessment(skillId);
-      result.message = 'Assessment not passed. Keep training and try again when ready.';
+      result.assessmentFailed = true;
+      result.correctness = input.correctness;
+      result.quality = input.quality;
+      result.message = `Assessment not passed (correctness: ${input.correctness}, quality: ${input.quality}). The student needs more training before retrying. You MUST now write a detailed summary explaining the result, their strengths, weaknesses, and concrete next steps.`;
     }
   } else {
     // After regular training, check if assessment should become available
@@ -183,6 +190,49 @@ async function handleCompleteSession(input, { sessionId, skillId }) {
   checkAndEmitStreakMilestone(session.userId);
 
   return result;
+}
+
+async function handleSetBelt(input, { sessionId, skillId, userId }) {
+  const session = await Session.findById(sessionId);
+  if (!session) return { error: 'Session not found' };
+  if (session.type !== 'onboarding') {
+    return { error: 'set_belt is only valid during onboarding sessions' };
+  }
+
+  const skill = await UserSkill.findById(skillId);
+  if (!skill) return { error: 'Skill not found' };
+
+  const fromBelt = skill.currentBelt;
+  const toBelt = input.belt;
+
+  if (fromBelt === toBelt) {
+    return { success: true, message: `Belt already set to ${toBelt}`, belt: toBelt };
+  }
+
+  skill.currentBelt = toBelt;
+  await skill.save();
+
+  await BeltHistory.create({
+    userId,
+    userSkillId: skillId,
+    skillCatalogId: skill.skillCatalogId,
+    fromBelt,
+    toBelt,
+    sessionId,
+  });
+
+  // Emit activity event
+  const catalog = await SkillCatalog.findById(skill.skillCatalogId).select('name slug');
+  if (catalog) {
+    emitBeltPromotion(userId, {
+      skillName: catalog.name,
+      skillSlug: catalog.slug,
+      fromBelt,
+      toBelt,
+    });
+  }
+
+  return { success: true, message: `Belt set to ${toBelt} (was ${fromBelt}). Reason: ${input.reason}`, belt: toBelt };
 }
 
 async function handleSetTrainingContext(input, skillId) {

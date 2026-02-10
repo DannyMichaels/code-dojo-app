@@ -51,3 +51,8 @@ export interface BeltInfo {
     reason?: string;
   };
 }
+
+export interface BeltAnalysis extends BeltInfo {
+  analysis: string;
+  readyForPromotion: boolean;
+}

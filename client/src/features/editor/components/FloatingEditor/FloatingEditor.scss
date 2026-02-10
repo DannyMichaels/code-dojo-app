@@ -1,0 +1,74 @@
+@use '../../../../styles/variables' as *;
+
+.FloatingEditor {
+  position: fixed;
+  z-index: 1500;
+  background: $background-color;
+  border: 1px solid $grayMid;
+  border-radius: $radius-lg;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &__titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-xs $spacing-sm;
+    background: $background-color-alt;
+    border-bottom: 1px solid $grayMid;
+    cursor: grab;
+    flex-shrink: 0;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &__title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $primaryColorWhite;
+  }
+
+  &__dock {
+    font-size: 0.75rem;
+    padding: 2px $spacing-sm;
+    border-radius: $radius-sm;
+    color: $primaryColor;
+    background: transparent;
+    border: 1px solid $primaryColor;
+    cursor: pointer;
+    transition: background $transition-default;
+
+    &:hover {
+      background: rgba($primaryColor, 0.15);
+    }
+  }
+
+  &__content {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &__resize {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      right: 3px;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid $grayLight;
+      border-bottom: 2px solid $grayLight;
+    }
+  }
+}

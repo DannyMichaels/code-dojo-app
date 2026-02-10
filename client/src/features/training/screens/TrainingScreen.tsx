@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import ChatPanel from "../components/ChatPanel";
 import CodePanel from "../../editor/components/CodePanel";
+import FloatingEditor from "../../editor/components/FloatingEditor";
+import ResizeHandle from "../components/ResizeHandle";
 import useChat from "../hooks/useChat";
 import { createSession, getSession } from "../services/session.service";
 import { getUserSkill } from "../../skills/services/skill.service";
 import Spinner from "../../../components/shared/Spinner";
-import type { Session } from "../types/session.types";
+import type { Session, SessionType } from "../types/session.types";
 import type { UserSkill } from "../../skills/types/skill.types";
 import "./TrainingScreen.scss";
 
@@ -16,6 +18,7 @@ export default function TrainingScreen() {
     sessionId?: string;
   }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [session, setSession] = useState<Session | null>(null);
   const [skill, setSkill] = useState<UserSkill | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,12 +28,17 @@ export default function TrainingScreen() {
   const [editorLanguage, setEditorLanguage] = useState<string | undefined>(
     undefined,
   );
+  const [editorCode, setEditorCode] = useState("");
+  const [splitPercent, setSplitPercent] = useState(60);
+  const [editorFloating, setEditorFloating] = useState(false);
+  const splitRef = useRef<HTMLDivElement>(null);
 
   const handleToolUse = useCallback(
     (tool: string, input: Record<string, unknown>) => {
       if (tool === "present_problem") {
         if (typeof input.starter_code === "string" && input.starter_code) {
           setStarterCode(input.starter_code);
+          setEditorCode(input.starter_code);
         }
         if (typeof input.language === "string" && input.language) {
           setEditorLanguage(input.language);
@@ -55,7 +63,9 @@ export default function TrainingScreen() {
         if (sessionId) {
           sess = await getSession(skillId!, sessionId);
         } else {
-          sess = await createSession(skillId!, "training");
+          const searchParams = new URLSearchParams(location.search);
+          const requestedType = (searchParams.get("type") || "training") as SessionType;
+          sess = await createSession(skillId!, requestedType);
           if (cancelled) return;
           navigate(`/train/${skillId}/${sess._id}`, { replace: true });
         }
@@ -131,8 +141,11 @@ export default function TrainingScreen() {
           </span>
         )}
       </div>
-      <div className="TrainingScreen__split">
-        <div className="TrainingScreen__chatPane">
+      <div className="TrainingScreen__split" ref={splitRef}>
+        <div
+          className="TrainingScreen__chatPane"
+          style={{ width: editorFloating ? '100%' : `${splitPercent}%` }}
+        >
           <ChatPanel
             messages={chat.messages}
             streaming={chat.streaming}
@@ -140,7 +153,32 @@ export default function TrainingScreen() {
             onSend={chat.sendMessage}
           />
         </div>
-        <div className="TrainingScreen__editorPane">
+        {!editorFloating && (
+          <>
+            <ResizeHandle onResize={setSplitPercent} containerRef={splitRef} />
+            <div
+              className="TrainingScreen__editorPane"
+              style={{ width: `${100 - splitPercent}%` }}
+            >
+              <CodePanel
+                language={
+                  editorLanguage ||
+                  session?.solution?.language ||
+                  catalogName.toLowerCase()
+                }
+                starterCode={starterCode}
+                code={editorCode}
+                onCodeChange={setEditorCode}
+                onSubmit={handleSubmitSolution}
+                submitting={submitting || chat.streaming}
+                onPopOut={() => setEditorFloating(true)}
+              />
+            </div>
+          </>
+        )}
+      </div>
+      {editorFloating && (
+        <FloatingEditor onDock={() => setEditorFloating(false)}>
           <CodePanel
             language={
               editorLanguage ||
@@ -148,11 +186,14 @@ export default function TrainingScreen() {
               catalogName.toLowerCase()
             }
             starterCode={starterCode}
+            code={editorCode}
+            onCodeChange={setEditorCode}
             onSubmit={handleSubmitSolution}
             submitting={submitting || chat.streaming}
+            compact
           />
-        </div>
-      </div>
+        </FloatingEditor>
+      )}
     </div>
   );
 }

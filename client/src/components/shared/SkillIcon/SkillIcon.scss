@@ -1,0 +1,11 @@
+@use '../../../styles/variables' as *;
+
+.SkillIcon {
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+
+  &--fallback {
+    color: $grayLight;
+  }
+}

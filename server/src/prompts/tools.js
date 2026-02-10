@@ -128,6 +128,25 @@ export const TRAINING_TOOLS = [
     },
   },
   {
+    name: 'set_belt',
+    description: 'Set the student\'s belt level during onboarding. Only valid during onboarding sessions. Use this after observing the student\'s ability level.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        belt: {
+          type: 'string',
+          enum: ['white', 'yellow', 'orange', 'green', 'blue', 'purple', 'brown', 'black'],
+          description: 'The belt level to assign',
+        },
+        reason: {
+          type: 'string',
+          description: 'Brief justification for the belt assignment',
+        },
+      },
+      required: ['belt', 'reason'],
+    },
+  },
+  {
     name: 'present_problem',
     description: 'Record a training problem\'s metadata (concepts targeted, belt level, starter code). IMPORTANT: This tool does NOT display anything to the student — you MUST also include the full problem in your chat response.',
     input_schema: {

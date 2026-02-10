@@ -63,24 +63,22 @@
   }
 
   &__chatPane {
-    width: 60%;
     min-width: 0;
     overflow: hidden;
 
     @media (max-width: $breakpoint-mobile) {
-      width: 100%;
+      width: 100% !important;
       flex: 1;
       min-height: 0;
     }
   }
 
   &__editorPane {
-    width: 40%;
     min-width: 0;
     overflow: hidden;
 
     @media (max-width: $breakpoint-mobile) {
-      width: 100%;
+      width: 100% !important;
       height: 300px;
       flex-shrink: 0;
       border-top: 1px solid $grayMid;

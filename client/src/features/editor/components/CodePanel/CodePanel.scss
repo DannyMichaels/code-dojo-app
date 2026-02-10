@@ -7,6 +7,10 @@
   background: $background-color;
   border-left: 1px solid $grayMid;
 
+  &--compact {
+    border-left: none;
+  }
+
   &__toolbar {
     display: flex;
     align-items: center;
@@ -14,6 +18,12 @@
     padding: $spacing-xs $spacing-sm;
     border-bottom: 1px solid $grayMid;
     background: $background-color-alt;
+  }
+
+  &__toolbarActions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
   }
 
   &__editor {

@@ -129,7 +129,7 @@ Instructions:
 2. Do NOT ask them to self-assess their level — observe it through challenges
 3. Present 3-5 graduated challenges, starting simple and increasing. Call \`present_problem\` to record metadata for each challenge, but ALSO write the full problem in your chat message — the tool does NOT display anything to the student
 4. After each response, use \`record_observation\` and \`update_mastery\` tools
-5. Based on all responses, determine their starting belt level
+5. Based on all responses, determine their starting belt level and use the \`set_belt\` tool to assign it
 6. Use \`set_training_context\` to save skill-specific training context (what makes code idiomatic, key concept areas, common anti-patterns, evaluation criteria)
 7. Use \`complete_session\` when done
 8. Be encouraging but honest about where they're starting
@@ -150,7 +150,12 @@ Instructions:
 4. Use all observation and mastery tools for each problem
 5. **Follow the Scaffolding Policy**: Never reveal solutions during an assessment. If the student fails a challenge, note the failure and move on to the next challenge. No hints during assessments — this is evaluation mode.
 6. After all problems, use \`complete_session\` with honest evaluation
-7. If they pass, congratulate them. If not, give constructive feedback on what to work on.`;
+7. **CRITICAL — After calling \`complete_session\`, you MUST write a detailed assessment summary to the student.** The tool result will tell you whether they passed or failed (and if promoted, the new belt). Your final message must include:
+   - **Result**: Did they pass or not? If promoted, announce the new belt clearly and celebrate it.
+   - **Strengths**: What they demonstrated well during the assessment.
+   - **Weaknesses**: Specific areas that need improvement (reference actual problems from the session).
+   - **Next steps**: Concrete recommendations — what to practice next, what concepts to focus on, whether to continue training at the current level or prepare for the next assessment.
+   - If they failed, be encouraging — explain exactly what gaps remain and how many more sessions they might need before retrying.`;
 
     case 'kata':
       return `## Session Type: Kata (Maintenance)
