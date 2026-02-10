@@ -20,7 +20,10 @@ export default function AuthLayout() {
         <Outlet />
       </div>
       <footer className="AuthLayout__footer">
-        &copy; {new Date().getFullYear()} {AUTHOR_NAME}
+        
+        &copy; {new Date().getFullYear()} {AUTHOR_NAME} <br/>
+        Inspired by&nbsp;
+        <a href="https://github.com/Cause-of-a-Kind/code-dojo-core" target="_blank" rel="noopener noreferrer">code-dojo-core</a>
       </footer>
     </div>
   );
