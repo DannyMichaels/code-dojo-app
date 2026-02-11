@@ -12,7 +12,7 @@ import Session from '../models/Session.js';
 import { TRAINING_PROTOCOL } from '../prompts/trainingProtocol.js';
 import { applyTimeDecay, BELT_ORDER } from './masteryCalc.js';
 import { getPrioritizedConcepts } from './spacedRepetition.js';
-import { isTechCategory } from '../utils/skillCategories.js';
+import { isTechCategory, isMusicCategory } from '../utils/skillCategories.js';
 
 /**
  * Build the full system prompt for a training session.
@@ -56,7 +56,16 @@ function buildSkillContext(skillCatalog) {
     lines.push(`## Skill: ${skillCatalog.name} (Category: ${category})\n\nThis is a new skill being onboarded. No training context has been established yet. You will need to generate one during the onboarding session using the set_training_context tool.`);
   }
 
-  if (!isTechCategory(category)) {
+  if (isMusicCategory(category)) {
+    lines.push(`\n**This is a MUSIC skill.** The student has an interactive music staff editor. When calling \`present_problem\`:
+- Set \`language\` to \`"music-notation"\`
+- Set \`starter_code\` to a JSON string with this format:
+  {"clef":"treble","timeSignature":"4/4","keySignature":"C","notes":[{"keys":["c/4"],"duration":"q"}]}
+- Clef options: "treble", "bass", "alto"
+- Note format: keys array with pitch/octave (e.g. "c/4", "g#/3"), duration as VexFlow code ("w"=whole, "h"=half, "q"=quarter, "8"=eighth, "16"=sixteenth)
+- You can provide an empty notes array for the student to fill in, or provide partial notation for them to complete
+- The student will submit their notation as JSON. Evaluate the musical correctness of their answer.`);
+  } else if (!isTechCategory(category)) {
     lines.push(`\n**This is NOT a programming skill.** Do NOT use the code editor. When calling \`present_problem\`, set \`starter_code\` to an empty string and \`language\` to an empty string. Present all challenges as text descriptions in your chat message. The student will respond via chat, not code.`);
   }
 
@@ -136,9 +145,16 @@ function buildCurrentState(userSkill, socialStats) {
 
 function buildSessionInstructions(sessionType, userSkill, skillCatalog) {
   const isTech = isTechCategory(skillCatalog?.category);
-  const editorInstruction = isTech
-    ? `always include \`starter_code\` and \`language\` so the student's code editor is pre-filled. ALSO write the full problem in your chat message — the tool does NOT display the problem text to the student`
-    : `set \`starter_code\` to an empty string and \`language\` to an empty string (this is not a code skill). Write the full problem in your chat message — the student will respond via chat`;
+  const isMusic = isMusicCategory(skillCatalog?.category);
+
+  let editorInstruction;
+  if (isMusic) {
+    editorInstruction = `set \`language\` to \`"music-notation"\` and \`starter_code\` to a JSON notation string (see music instructions above) so the student's staff editor is pre-filled. ALSO write the full problem in your chat message — the tool does NOT display the problem text to the student`;
+  } else if (isTech) {
+    editorInstruction = `always include \`starter_code\` and \`language\` so the student's code editor is pre-filled. ALSO write the full problem in your chat message — the tool does NOT display the problem text to the student`;
+  } else {
+    editorInstruction = `set \`starter_code\` to an empty string and \`language\` to an empty string (this is not a code skill). Write the full problem in your chat message — the student will respond via chat`;
+  }
 
   switch (sessionType) {
     case 'onboarding':

@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import ChatPanel from "../components/ChatPanel";
 import CodePanel from "../../editor/components/CodePanel";
+import MusicTraining from "../components/MusicTraining";
 import FloatingEditor from "../../editor/components/FloatingEditor";
 import ResizeHandle from "../components/ResizeHandle";
 import useChat from "../hooks/useChat";
 import { createSession, getSession, reactivateSession } from "../services/session.service";
 import { getUserSkill } from "../../skills/services/skill.service";
 import Spinner from "../../../components/shared/Spinner";
-import { isTechCategory } from "../../../utils/skillCategories";
+import { isTechCategory, isMusicCategory } from "../../../utils/skillCategories";
 import type { Session, SessionType } from "../types/session.types";
 import type { UserSkill } from "../../skills/types/skill.types";
 import "./TrainingScreen.scss";
@@ -155,6 +156,14 @@ export default function TrainingScreen() {
     }
   };
 
+  const { catalogName, showCodeEditor, showMusicEditor, showEditor } = useMemo(() => {
+    const name = skill?.skillCatalogId?.name || "Training";
+    const category = skill?.skillCatalogId?.category;
+    const code = isTechCategory(category);
+    const music = isMusicCategory(category);
+    return { catalogName: name, showCodeEditor: code, showMusicEditor: music, showEditor: code || music };
+  }, [skill?.skillCatalogId?.name, skill?.skillCatalogId?.category]);
+
   if (loading) {
     return (
       <div className="TrainingScreen TrainingScreen--loading">
@@ -170,9 +179,6 @@ export default function TrainingScreen() {
       </div>
     );
   }
-
-  const catalogName = skill?.skillCatalogId?.name || "Training";
-  const showEditor = isTechCategory(skill?.skillCatalogId?.category);
 
   return (
     <div className="TrainingScreen">
@@ -192,7 +198,7 @@ export default function TrainingScreen() {
       <div className="TrainingScreen__split" ref={splitRef}>
         <div
           className="TrainingScreen__chatPane"
-          style={{ width: !showEditor || editorFloating ? '100%' : `${splitPercent}%` }}
+          style={{ width: !showEditor || (showCodeEditor && editorFloating) ? '100%' : `${splitPercent}%` }}
         >
           <ChatPanel
             messages={chat.messages}
@@ -204,7 +210,7 @@ export default function TrainingScreen() {
             onContinueSession={handleContinueSession}
           />
         </div>
-        {showEditor && !editorFloating && (
+        {showCodeEditor && !editorFloating && (
           <>
             <ResizeHandle onResize={setSplitPercent} containerRef={splitRef} />
             <div
@@ -227,8 +233,18 @@ export default function TrainingScreen() {
             </div>
           </>
         )}
+        {showMusicEditor && (
+          <MusicTraining
+            notation={starterCode}
+            sendMessage={chat.sendMessage}
+            streaming={chat.streaming}
+            splitPercent={splitPercent}
+            onResize={setSplitPercent}
+            splitRef={splitRef}
+          />
+        )}
       </div>
-      {showEditor && editorFloating && (
+      {showCodeEditor && editorFloating && (
         <FloatingEditor onDock={() => setEditorFloating(false)}>
           <CodePanel
             language={

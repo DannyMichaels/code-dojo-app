@@ -1,0 +1,49 @@
+@use '../../../../styles/variables' as *;
+
+.NotePalette {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  &--selectMode {
+    .NotePalette__btn:not(.NotePalette__btn--mode):not(.NotePalette__btn--active) {
+      opacity: 0.4;
+    }
+  }
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid $grayMid;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $primaryColorWhite;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background $transition-default, border-color $transition-default,
+      opacity $transition-default;
+
+    &:hover {
+      background: $grayDark;
+      border-color: $grayLight;
+    }
+
+    &--active {
+      background: $primaryColor;
+      border-color: $primaryColor;
+      color: #000;
+
+      &:hover {
+        background: $primaryColorAlt;
+        border-color: $primaryColorAlt;
+      }
+    }
+
+    &--mode {
+      margin-right: $spacing-xs;
+    }
+  }
+}

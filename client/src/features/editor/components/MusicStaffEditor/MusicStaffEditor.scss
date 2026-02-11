@@ -1,0 +1,68 @@
+@use '../../../../styles/variables' as *;
+
+.MusicStaffEditor {
+  width: 100%;
+  min-height: 200px;
+  background: $background-color;
+  cursor: crosshair;
+  overflow-x: auto;
+  outline: none;
+
+  &--readOnly {
+    cursor: default;
+  }
+
+  &--selectMode {
+    cursor: default;
+
+    [data-note-index] {
+      cursor: pointer;
+    }
+  }
+
+  &--dragging {
+    cursor: grabbing;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+
+    // VexFlow SVG elements — light theme overrides for dark background
+    rect {
+      fill: transparent;
+    }
+
+    text {
+      fill: $primaryColorWhite;
+    }
+
+    path,
+    line {
+      stroke: $primaryColorWhite;
+    }
+
+    // Note heads and stems
+    .vf-stavenote {
+      path {
+        fill: $primaryColor;
+        stroke: $primaryColor;
+      }
+    }
+
+    // Playback highlight
+    [data-note-index].MusicStaffEditor__note--playing path {
+      fill: $primaryColorWhite;
+      stroke: $primaryColorWhite;
+      filter: drop-shadow(0 0 6px rgba($primaryColor, 0.6));
+    }
+
+    // Selection highlight
+    [data-note-index].MusicStaffEditor__note--selected path {
+      fill: #ffb347;
+      stroke: #ffb347;
+      filter: drop-shadow(0 0 4px rgba($primaryColor, 0.8));
+    }
+  }
+}

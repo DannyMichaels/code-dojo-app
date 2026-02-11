@@ -1,0 +1,62 @@
+@use '../../../../styles/variables' as *;
+
+.MusicPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: $background-color;
+  border-left: 1px solid $grayMid;
+
+  &--compact {
+    border-left: none;
+  }
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-xs $spacing-sm;
+    border-bottom: 1px solid $grayMid;
+    background: $background-color-alt;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+  }
+
+  &__toolbarLeft {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    flex-wrap: wrap;
+  }
+
+  &__toolbarActions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+  }
+
+  &__select {
+    padding: $spacing-xs $spacing-sm;
+    border: 1px solid $grayMid;
+    border-radius: $radius-sm;
+    background: $background-color;
+    color: $primaryColorWhite;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $grayLight;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $primaryColor;
+    }
+  }
+
+  &__staff {
+    flex: 1;
+    overflow: auto;
+    padding: $spacing-md;
+  }
+}
