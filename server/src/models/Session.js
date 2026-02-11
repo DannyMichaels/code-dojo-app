@@ -64,6 +64,10 @@ const sessionSchema = new mongoose.Schema({
     enum: ['active', 'completed', 'abandoned'],
     default: 'active',
   },
+  problemsPresented: {
+    type: Number,
+    default: 0,
+  },
   problem: {
     prompt: { type: String, default: '' },
     conceptsTargeted: [String],

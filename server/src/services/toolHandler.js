@@ -177,6 +177,11 @@ async function handleCompleteSession(input, { sessionId, skillId, userId, skillC
     }
   }
 
+  // Soft guard: warn if training session ended with fewer than 3 problems
+  if (session.type === 'training' && session.problemsPresented < 3) {
+    result.note = `Only ${session.problemsPresented} problem(s) presented. Consider presenting at least 3 challenges per session for thorough practice.`;
+  }
+
   // Update streak and check for milestones on all session completions
   const currentStreak = await updateStreak(session.userId);
   if (currentStreak !== null) {
@@ -251,11 +256,14 @@ async function handleSetTrainingContext(input, { skillId, skillCatalogId }) {
 
 async function handlePresentProblem(input, sessionId) {
   await Session.findByIdAndUpdate(sessionId, {
-    'problem.prompt': input.prompt,
-    'problem.conceptsTargeted': input.concepts_targeted,
-    'problem.beltLevel': input.belt_level,
-    'problem.starterCode': input.starter_code || '',
-    'solution.language': input.language || '',
+    $set: {
+      'problem.prompt': input.prompt,
+      'problem.conceptsTargeted': input.concepts_targeted,
+      'problem.beltLevel': input.belt_level,
+      'problem.starterCode': input.starter_code || '',
+      'solution.language': input.language || '',
+    },
+    $inc: { problemsPresented: 1 },
   });
 
   return {

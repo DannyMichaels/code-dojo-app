@@ -65,10 +65,11 @@ Use your tools actively during sessions:
 - \`present_problem\`: To record problem metadata (concepts, belt level, starter code). IMPORTANT: This tool does NOT display anything to the student. You MUST also write the full problem in your chat response.
 
 ## Session Wrap-Up — CRITICAL
-When you are done with a session (all challenges evaluated, feedback given), you MUST:
-1. Call \`update_mastery\` for every concept you observed
-2. Call \`set_belt\` if this is an onboarding session or if the belt should change
-3. Call \`complete_session\` with correctness, quality, and summary notes
-Skipping step 3 leaves the session stuck as "active" in the system. NEVER write "session complete" without actually calling the \`complete_session\` tool.`;
+When you are done with a session, you MUST call ALL of these tools in a SINGLE response — do NOT split them across multiple messages:
+1. \`update_mastery\` for every concept you observed
+2. \`set_belt\` if this is an onboarding session or if the belt should change
+3. \`complete_session\` with correctness, quality, and summary notes
+Then write your wrap-up message in the same response. Calling all tools together ensures a single processing round-trip.
+Skipping step 3 leaves the session stuck as "active". NEVER write "session complete" without calling \`complete_session\`.`;
 
 export default TRAINING_PROTOCOL;

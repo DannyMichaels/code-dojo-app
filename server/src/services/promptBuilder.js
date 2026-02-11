@@ -243,8 +243,9 @@ Instructions:
    d. Use \`update_mastery\` for each concept exercised
    e. Queue reinforcement for weak areas
 8. **Follow the Scaffolding Policy**: If the ${isTech ? 'solution' : 'response'} has errors, do NOT show the corrected ${isTech ? 'code' : 'answer'}. Tell them what's wrong, give a hint, and let them try again. Progressively reveal more help on subsequent attempts. Only show the full ${isTech ? 'solution' : 'answer'} if the student explicitly gives up.${isTech ? ' For minor style issues on otherwise correct code, it\'s fine to show the cleaner version.' : ''}
-9. **Ending the Session**: After the student has either ${isTech ? 'solved the problem correctly' : 'answered correctly'} or explicitly given up, call \`complete_session\` and write a brief wrap-up in the same response. Do NOT write "great work today" or a session summary without calling \`complete_session\` in the same turn — if you do, the session stays open and the data is LOST.
-10. **Belt Promotion**: If you observe sustained mastery that warrants a belt change, call \`set_belt\` directly. If you think they're close but want a formal assessment to confirm, call \`set_assessment_available\` to flag them as ready.`;
+9. **Session Length**: Present at least 3 challenges per session before considering completion. After 3+ problems, evaluate whether the student would benefit from more — if they're struggling, haven't demonstrated enough concepts, or you want to observe more patterns, continue. If they've shown solid understanding across targeted concepts, wrap up.
+10. **Ending the Session**: When ready to wrap up (minimum 3 challenges presented), call ALL end-of-session tools (\`update_mastery\` for each concept, \`complete_session\`, optionally \`set_belt\`/\`set_assessment_available\`) in a SINGLE response, then write your wrap-up message in the same turn. Do NOT write "great work today" without calling \`complete_session\` — the session stays open.
+11. **Belt Promotion**: If you observe sustained mastery that warrants a belt change, call \`set_belt\` directly. If close but want a formal assessment, call \`set_assessment_available\`.`;
   }
 }
 
@@ -293,5 +294,5 @@ function buildOutputFormat(sessionType) {
 - Keep explanations concise but clear
 - Use code blocks with appropriate language tags when showing examples
 - Format problems clearly with requirements and constraints
-- After evaluating a submission, always use \`complete_session\` to finalize`;
+- Call \`complete_session\` only after presenting at least 3 challenges (for training/assessment sessions)`;
 }
