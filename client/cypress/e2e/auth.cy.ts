@@ -25,7 +25,7 @@ describe('Authentication', () => {
   it('logs out and redirects to login', () => {
     cy.apiLogin();
     cy.visit('/dashboard');
-    cy.contains('Logout', { matchCase: false }).click();
+    cy.get('.AppLayout__logout').click();
     cy.url().should('include', '/login');
   });
 });

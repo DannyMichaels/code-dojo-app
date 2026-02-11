@@ -252,6 +252,7 @@ async function handlePresentProblem(input, sessionId) {
     'problem.prompt': input.prompt,
     'problem.conceptsTargeted': input.concepts_targeted,
     'problem.beltLevel': input.belt_level,
+    'problem.starterCode': input.starter_code || '',
     'solution.language': input.language || '',
   });
 

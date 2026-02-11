@@ -68,6 +68,7 @@ const sessionSchema = new mongoose.Schema({
     prompt: { type: String, default: '' },
     conceptsTargeted: [String],
     beltLevel: { type: String, default: 'white' },
+    starterCode: { type: String, default: '' },
   },
   solution: {
     submitted: { type: Boolean, default: false },

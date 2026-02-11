@@ -12,8 +12,8 @@ interface ChatPanelProps {
   error: string | null;
   onSend: (content: string) => void;
   sessionCompleted?: boolean;
-  onNewSession?: () => void;
-  onContinueSession?: () => void;
+  onNewSession?: () => void | Promise<void>;
+  onContinueSession?: () => void | Promise<void>;
 }
 
 export default function ChatPanel({ messages, streaming, error, onSend, sessionCompleted, onNewSession, onContinueSession }: ChatPanelProps) {

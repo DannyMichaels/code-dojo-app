@@ -1,5 +1,8 @@
 @use '../../../../styles/variables' as *;
 
+$edge-size: 6px;
+$corner-size: 12px;
+
 .FloatingEditor {
   position: fixed;
   z-index: 1500;
@@ -9,7 +12,7 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 
   &__titlebar {
     display: flex;
@@ -18,6 +21,7 @@
     padding: $spacing-xs $spacing-sm;
     background: $background-color-alt;
     border-bottom: 1px solid $grayMid;
+    border-radius: $radius-lg $radius-lg 0 0;
     cursor: grab;
     flex-shrink: 0;
 
@@ -50,25 +54,89 @@
   &__content {
     flex: 1;
     overflow: hidden;
+    border-radius: 0 0 $radius-lg $radius-lg;
   }
 
-  &__resize {
+  // Edge resize handles (invisible hit areas along each edge)
+  &__edge {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 16px;
-    height: 16px;
-    cursor: nwse-resize;
+    z-index: 10;
 
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 3px;
-      right: 3px;
-      width: 8px;
-      height: 8px;
-      border-right: 2px solid $grayLight;
-      border-bottom: 2px solid $grayLight;
+    &--n {
+      top: -#{$edge-size / 2};
+      left: $corner-size;
+      right: $corner-size;
+      height: $edge-size;
+      cursor: ns-resize;
+    }
+
+    &--s {
+      bottom: -#{$edge-size / 2};
+      left: $corner-size;
+      right: $corner-size;
+      height: $edge-size;
+      cursor: ns-resize;
+    }
+
+    &--e {
+      top: $corner-size;
+      bottom: $corner-size;
+      right: -#{$edge-size / 2};
+      width: $edge-size;
+      cursor: ew-resize;
+    }
+
+    &--w {
+      top: $corner-size;
+      bottom: $corner-size;
+      left: -#{$edge-size / 2};
+      width: $edge-size;
+      cursor: ew-resize;
+    }
+  }
+
+  // Corner resize handles
+  &__corner {
+    position: absolute;
+    width: $corner-size;
+    height: $corner-size;
+    z-index: 11;
+
+    &--nw {
+      top: -#{$edge-size / 2};
+      left: -#{$edge-size / 2};
+      cursor: nwse-resize;
+    }
+
+    &--ne {
+      top: -#{$edge-size / 2};
+      right: -#{$edge-size / 2};
+      cursor: nesw-resize;
+    }
+
+    &--sw {
+      bottom: -#{$edge-size / 2};
+      left: -#{$edge-size / 2};
+      cursor: nesw-resize;
+    }
+
+    &--se {
+      bottom: -#{$edge-size / 2};
+      right: -#{$edge-size / 2};
+      cursor: nwse-resize;
+
+      // Visual indicator for the SE corner
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid $grayLight;
+        border-bottom: 2px solid $grayLight;
+        opacity: 0.6;
+      }
     }
   }
 }

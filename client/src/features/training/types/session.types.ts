@@ -19,6 +19,7 @@ export interface Session {
     prompt: string;
     conceptsTargeted: string[];
     beltLevel: string;
+    starterCode?: string;
   };
   solution: {
     submitted: boolean;

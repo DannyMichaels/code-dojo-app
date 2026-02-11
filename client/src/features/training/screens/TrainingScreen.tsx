@@ -107,6 +107,14 @@ export default function TrainingScreen() {
     if (session?.status === 'completed') {
       setSessionCompleted(true);
     }
+    // Restore starter code and language from persisted session data on load/refresh
+    if (session?.problem?.starterCode && !starterCode) {
+      setStarterCode(session.problem.starterCode);
+      setEditorCode(session.problem.starterCode);
+    }
+    if (session?.solution?.language && !editorLanguage) {
+      setEditorLanguage(session.solution.language);
+    }
   }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmitSolution = (code: string, language: string) => {
