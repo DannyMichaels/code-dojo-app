@@ -5,7 +5,7 @@ import CodePanel from "../../editor/components/CodePanel";
 import FloatingEditor from "../../editor/components/FloatingEditor";
 import ResizeHandle from "../components/ResizeHandle";
 import useChat from "../hooks/useChat";
-import { createSession, getSession } from "../services/session.service";
+import { createSession, getSession, reactivateSession } from "../services/session.service";
 import { getUserSkill } from "../../skills/services/skill.service";
 import Spinner from "../../../components/shared/Spinner";
 import type { Session, SessionType } from "../types/session.types";
@@ -116,12 +116,34 @@ export default function TrainingScreen() {
     setSubmitting(false);
   };
 
-  const handleNewSession = () => {
-    navigate(`/train/${skillId}`);
+  const handleNewSession = async () => {
+    setSessionCompleted(false);
+    setSession(null);
+    setStarterCode('');
+    setEditorCode('');
+    setEditorLanguage(undefined);
+    chat.setMessages([]);
+
+    try {
+      setLoading(true);
+      const sess = await createSession(skillId!, 'training');
+      setSession(sess);
+      navigate(`/train/${skillId}/${sess._id}`, { replace: true });
+    } catch (err: any) {
+      setInitError(err.response?.data?.error || 'Failed to create session');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleContinueSession = () => {
-    setSessionCompleted(false);
+  const handleContinueSession = async () => {
+    if (!skillId || !session) return;
+    try {
+      await reactivateSession(skillId, session._id);
+      setSessionCompleted(false);
+    } catch (err: any) {
+      setInitError(err.response?.data?.error || 'Failed to reactivate session');
+    }
   };
 
   if (loading) {

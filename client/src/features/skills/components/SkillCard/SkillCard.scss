@@ -3,12 +3,13 @@
 .SkillCard {
   &__header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: $spacing-sm;
     margin-bottom: $spacing-sm;
   }
 
   &__name {
+    flex: 1;
     font-family: $fontFamilySecondary;
     font-size: 1.125rem;
     margin: 0;

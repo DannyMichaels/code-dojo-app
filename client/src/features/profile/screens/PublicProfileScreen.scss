@@ -133,13 +133,42 @@
   &__skillCard {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: $spacing-sm;
     padding: $spacing-sm $spacing-md;
     background: $background-color-alt;
     border-radius: $radius-sm;
+    cursor: pointer;
+    transition: background-color 0.15s;
+
+    &:hover {
+      background: lighten($background-color-alt, 5%);
+    }
+
+    &--expanded {
+      border-radius: $radius-sm $radius-sm 0 0;
+    }
   }
 
   &__skillName {
+    flex: 1;
     font-weight: 600;
+  }
+
+  &__expandIcon {
+    color: $grayLight;
+    transition: transform 0.2s;
+    width: 16px;
+    height: 16px;
+  }
+
+  &__skillCard--expanded &__expandIcon {
+    transform: rotate(180deg);
+  }
+
+  &__skillDetails {
+    background: $background-color-alt;
+    border-radius: 0 0 $radius-sm $radius-sm;
+    padding: $spacing-sm $spacing-md $spacing-md;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 }

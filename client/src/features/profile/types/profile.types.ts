@@ -19,4 +19,5 @@ export interface PublicSkill {
   skillCatalogId: { name: string; slug: string; icon: string | null };
   currentBelt: string;
   createdAt: string;
+  concepts?: Record<string, { mastery: number; streak: number; contexts: string[] }>;
 }

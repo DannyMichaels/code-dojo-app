@@ -5,7 +5,10 @@ import { isFollowing as checkIsFollowing } from '../../social/services/social.se
 import useAuthStore from '../../auth/store/auth.store';
 import Avatar from '../../../components/shared/Avatar';
 import BeltBadge from '../../skills/components/BeltBadge';
+import SkillIcon from '../../../components/shared/SkillIcon';
+import ConceptList from '../../skills/components/ConceptList';
 import Spinner from '../../../components/shared/Spinner';
+import { ChevronDown } from 'lucide-react';
 import FollowButton from '../components/FollowButton';
 import AvatarUpload from '../components/AvatarUpload';
 import FollowListModal from '../components/FollowListModal';
@@ -21,6 +24,7 @@ export default function PublicProfileScreen() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedSkillId, setExpandedSkillId] = useState<string | null>(null);
   const [followModal, setFollowModal] = useState<{ open: boolean; mode: 'followers' | 'following' }>({
     open: false,
     mode: 'followers',
@@ -167,11 +171,23 @@ export default function PublicProfileScreen() {
       ) : (
         <div className="PublicProfileScreen__skills">
           {skills.map((skill) => (
-            <div key={skill._id} className="PublicProfileScreen__skillCard">
-              <span className="PublicProfileScreen__skillName">
-                {skill.skillCatalogId.name}
-              </span>
-              <BeltBadge belt={skill.currentBelt as Belt} />
+            <div key={skill._id}>
+              <div
+                className={`PublicProfileScreen__skillCard ${expandedSkillId === skill._id ? 'PublicProfileScreen__skillCard--expanded' : ''}`}
+                onClick={() => setExpandedSkillId((prev) => (prev === skill._id ? null : skill._id))}
+              >
+                <SkillIcon slug={skill.skillCatalogId.slug} size={20} />
+                <span className="PublicProfileScreen__skillName">
+                  {skill.skillCatalogId.name}
+                </span>
+                <BeltBadge belt={skill.currentBelt as Belt} />
+                <ChevronDown className="PublicProfileScreen__expandIcon" />
+              </div>
+              {expandedSkillId === skill._id && skill.concepts && (
+                <div className="PublicProfileScreen__skillDetails">
+                  <ConceptList concepts={skill.concepts} />
+                </div>
+              )}
             </div>
           ))}
         </div>

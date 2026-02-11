@@ -80,7 +80,7 @@ export async function getPublicSkills(req, res, next) {
       isPublic: true,
     })
       .populate('skillCatalogId', 'name slug icon')
-      .select('skillCatalogId currentBelt createdAt')
+      .select('skillCatalogId currentBelt createdAt concepts')
       .lean();
 
     res.json({ skills });

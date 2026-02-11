@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import Card from '../../../../components/shared/Card';
 import BeltBadge from '../BeltBadge';
+import SkillIcon from '../../../../components/shared/SkillIcon';
 import type { UserSkill } from '../../types/skill.types';
 import './SkillCard.scss';
 
@@ -17,6 +18,7 @@ export default function SkillCard({ skill }: SkillCardProps) {
     <Card hoverable onClick={() => navigate(`/skills/${skill._id}`)}>
       <div className="SkillCard">
         <div className="SkillCard__header">
+          <SkillIcon slug={catalog.slug} size={20} />
           <h3 className="SkillCard__name">{catalog.name}</h3>
           <BeltBadge belt={skill.currentBelt} size="sm" />
         </div>

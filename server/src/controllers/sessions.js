@@ -98,6 +98,30 @@ export async function deleteSession(req, res, next) {
   }
 }
 
+// PATCH /api/user-skills/:skillId/sessions/:sid/reactivate
+export async function reactivateSession(req, res, next) {
+  try {
+    const session = await Session.findOneAndUpdate(
+      {
+        _id: req.params.sid,
+        skillId: req.params.skillId,
+        userId: req.userId,
+        status: 'completed',
+      },
+      { status: 'active' },
+      { new: true }
+    );
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found or not completed' });
+    }
+
+    res.json({ session });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // POST /api/user-skills/:skillId/sessions/:sid/messages — SSE streaming with tool loop
 export async function sendMessage(req, res, next) {
   const { skillId, sid } = req.params;

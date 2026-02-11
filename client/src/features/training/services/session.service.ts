@@ -20,6 +20,11 @@ export async function deleteSession(skillId: string, sessionId: string): Promise
   await api.delete(`/user-skills/${skillId}/sessions/${sessionId}`);
 }
 
+export async function reactivateSession(skillId: string, sessionId: string): Promise<Session> {
+  const res = await api.patch(`/user-skills/${skillId}/sessions/${sessionId}/reactivate`);
+  return res.data.session;
+}
+
 /**
  * Send a message and stream the response via SSE.
  * Returns an abort controller for cancellation.

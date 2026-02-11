@@ -42,6 +42,46 @@ export async function emitAssessmentPassed(userId, { skillName, skillSlug, belt 
   }
 }
 
+export async function updateStreak(userId) {
+  try {
+    const user = await User.findById(userId).select('lastSession currentStreak longestStreak totalSessions');
+    if (!user) return;
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (user.lastSession) {
+      const lastDate = new Date(user.lastSession);
+      const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+      const diffDays = Math.floor((today - lastDay) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        // Same day — just update lastSession, no streak change
+        user.lastSession = now;
+      } else if (diffDays === 1) {
+        // Consecutive day — increment streak
+        user.currentStreak += 1;
+        user.longestStreak = Math.max(user.longestStreak, user.currentStreak);
+        user.lastSession = now;
+      } else {
+        // Gap — reset streak to 1
+        user.currentStreak = 1;
+        user.lastSession = now;
+      }
+    } else {
+      // First session ever
+      user.currentStreak = 1;
+      user.longestStreak = Math.max(user.longestStreak, 1);
+      user.lastSession = now;
+    }
+
+    user.totalSessions += 1;
+    await user.save();
+  } catch (err) {
+    console.error('Failed to update streak:', err.message);
+  }
+}
+
 const STREAK_MILESTONES = [7, 14, 30, 60, 100];
 
 export async function checkAndEmitStreakMilestone(userId) {

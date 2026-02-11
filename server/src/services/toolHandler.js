@@ -4,7 +4,7 @@ import SkillCatalog from '../models/SkillCatalog.js';
 import BeltHistory from '../models/BeltHistory.js';
 import { promoteBelt, failAssessment, checkAssessmentEligibility } from './assessmentService.js';
 import { computeMastery } from './masteryCalc.js';
-import { emitBeltPromotion, emitAssessmentPassed, checkAndEmitStreakMilestone } from './activityService.js';
+import { updateStreak, emitBeltPromotion, emitAssessmentPassed, checkAndEmitStreakMilestone } from './activityService.js';
 
 /**
  * Process a tool call from Claude and write results to MongoDB.
@@ -186,7 +186,8 @@ async function handleCompleteSession(input, { sessionId, skillId }) {
     }
   }
 
-  // Check for streak milestones on all session completions
+  // Update streak and check for milestones on all session completions
+  await updateStreak(session.userId);
   checkAndEmitStreakMilestone(session.userId);
 
   return result;
