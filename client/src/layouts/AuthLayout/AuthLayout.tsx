@@ -1,6 +1,6 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import useAuthStore from '../../features/auth/store/auth.store';
-import { APP_NAME, AUTHOR_NAME, BrandIcon } from '../../constants/app';
+import { APP_NAME, BrandIcon } from '../../constants/app';
 import './AuthLayout.scss';
 
 export default function AuthLayout() {

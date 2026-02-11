@@ -77,8 +77,10 @@ export default function useChat({ skillId, sessionId, initialMessages = [], maxR
         retryCountRef.current = 0;
       },
       (err) => {
-        // Attempt reconnection for network errors
-        if (retryCountRef.current < maxRetries && !err.includes('AbortError')) {
+        // Don't retry on non-transient errors (session lock, auth, validation)
+        const nonRetryable = err.includes('AbortError') || err.includes('already processing') || err.includes('not active');
+
+        if (retryCountRef.current < maxRetries && !nonRetryable) {
           retryCountRef.current++;
           setTimeout(() => {
             startStream(lastContentRef.current);
