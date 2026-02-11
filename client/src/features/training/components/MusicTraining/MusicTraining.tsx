@@ -41,12 +41,19 @@ export default function MusicTraining({
           return implied ? `${note}${implied}/${octave}` : key;
         };
 
-        const noteNames = parsed.notes
-          .map((n: { keys: string[]; accidentals?: (string | null)[] }) =>
-            n.keys.map((k: string, ki: number) => resolveKey(k, n.accidentals?.[ki])).join(','),
-          )
+        // Resolve pitches in notes for both display text and JSON
+        const resolvedNotes = parsed.notes.map(
+          (n: { keys: string[]; accidentals?: (string | null)[]; [k: string]: unknown }) => ({
+            ...n,
+            keys: n.keys.map((k: string, ki: number) => resolveKey(k, n.accidentals?.[ki])),
+          }),
+        );
+
+        const noteNames = resolvedNotes
+          .map((n: { keys: string[] }) => n.keys.join(','))
           .join(' | ');
-        const submitMsg = `Here is my notation (${parsed.clef} clef, ${parsed.timeSignature}, key of ${parsed.keySignature || 'C'}):\n\n${noteNames}\n\n\`\`\`json\n${notationJson}\n\`\`\``;
+        const resolvedJson = JSON.stringify({ ...parsed, notes: resolvedNotes });
+        const submitMsg = `Here is my notation (${parsed.clef} clef, ${parsed.timeSignature}, key of ${parsed.keySignature || 'C'}):\n\n${noteNames}\n\n\`\`\`json\n${resolvedJson}\n\`\`\``;
         sendMessage(submitMsg);
       } finally {
         setSubmitting(false);

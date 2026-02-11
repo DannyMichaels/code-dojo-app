@@ -27,8 +27,26 @@ export async function streamMessage({ model = MODELS.SONNET, system, messages, t
     messages,
   };
 
-  if (system) params.system = system;
-  if (tools && tools.length > 0) params.tools = tools;
+  if (system) {
+    if (Array.isArray(system)) {
+      // Multiple blocks — each gets cache_control for tool-loop caching,
+      // and the static block (first) also gets cross-message caching
+      params.system = system.filter(Boolean).map(text => ({
+        type: 'text',
+        text,
+        cache_control: { type: 'ephemeral' },
+      }));
+    } else {
+      params.system = [
+        { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
+      ];
+    }
+  }
+  if (tools && tools.length > 0) {
+    params.tools = tools.map((tool, i) =>
+      i === tools.length - 1 ? { ...tool, cache_control: { type: 'ephemeral' } } : tool
+    );
+  }
 
   const stream = await client.messages.stream(params);
 
@@ -41,6 +59,14 @@ export async function streamMessage({ model = MODELS.SONNET, system, messages, t
   });
 
   const response = await stream.finalMessage();
+
+  // Log cache performance
+  if (response.usage) {
+    const { cache_creation_input_tokens, cache_read_input_tokens, input_tokens } = response.usage;
+    if (cache_creation_input_tokens || cache_read_input_tokens) {
+      console.log(`[anthropic] cache: created=${cache_creation_input_tokens || 0}, read=${cache_read_input_tokens || 0}, input=${input_tokens}`);
+    }
+  }
 
   // Collect tool use blocks
   for (const block of response.content) {

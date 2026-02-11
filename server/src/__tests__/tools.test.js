@@ -85,14 +85,14 @@ describe('update_mastery', () => {
     const result = await handleToolCall(
       {
         name: 'update_mastery',
-        input: { concept: 'Array Methods', success: true, context: 'data_transformation', belt_level: 'yellow' },
+        input: { concept: 'Array Methods', success: true, mastery: 0.85, context: 'data_transformation', belt_level: 'yellow' },
       },
       { sessionId: session._id, skillId: skill._id, userId: user._id }
     );
 
     expect(result.success).toBe(true);
     expect(result.concept).toBe('array_methods');
-    expect(result.mastery).toBeCloseTo(0.84, 1); // computeMastery: dampened by confidence factor, not 100%
+    expect(result.mastery).toBe(0.85);
 
     const updated = await UserSkill.findById(skill._id);
     const concept = updated.concepts.get('array_methods');
@@ -108,16 +108,16 @@ describe('update_mastery', () => {
   it('tracks failure and resets streak', async () => {
     // First: success
     await handleToolCall(
-      { name: 'update_mastery', input: { concept: 'recursion', success: true } },
+      { name: 'update_mastery', input: { concept: 'recursion', success: true, mastery: 0.7 } },
       { sessionId: session._id, skillId: skill._id, userId: user._id }
     );
     // Second: failure
     const result = await handleToolCall(
-      { name: 'update_mastery', input: { concept: 'recursion', success: false } },
+      { name: 'update_mastery', input: { concept: 'recursion', success: false, mastery: 0.45 } },
       { sessionId: session._id, skillId: skill._id, userId: user._id }
     );
 
-    expect(result.mastery).toBeCloseTo(0.45, 2); // computeMastery: base 0.5, no streak, confidence factor 0.9
+    expect(result.mastery).toBe(0.45);
 
     const updated = await UserSkill.findById(skill._id);
     const concept = updated.concepts.get('recursion');
@@ -128,7 +128,7 @@ describe('update_mastery', () => {
 
   it('records mastery update in session with from -> to format', async () => {
     await handleToolCall(
-      { name: 'update_mastery', input: { concept: 'closures', success: true } },
+      { name: 'update_mastery', input: { concept: 'closures', success: true, mastery: 0.82 } },
       { sessionId: session._id, skillId: skill._id, userId: user._id }
     );
 
@@ -167,17 +167,6 @@ describe('update_mastery', () => {
 
     const updated = await UserSkill.findById(skill._id);
     expect(updated.concepts.get('loops').mastery).toBe(0.45);
-  });
-
-  it('falls back to formula when mastery not provided', async () => {
-    const result = await handleToolCall(
-      { name: 'update_mastery', input: { concept: 'variables', success: true } },
-      { sessionId: session._id, skillId: skill._id, userId: user._id }
-    );
-
-    expect(result.success).toBe(true);
-    // computeMastery formula result for 1 exposure, 1 success
-    expect(result.mastery).toBeCloseTo(0.84, 1);
   });
 
   it('returns error for non-existent skill', async () => {

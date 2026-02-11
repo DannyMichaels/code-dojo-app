@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import confetti from "canvas-confetti";
+import { useSnackbar } from "notistack";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import ChatPanel from "../components/ChatPanel";
 import CodePanel from "../../editor/components/CodePanel";
@@ -22,6 +23,7 @@ export default function TrainingScreen() {
   }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { enqueueSnackbar } = useSnackbar();
   const [session, setSession] = useState<Session | null>(null);
   const [skill, setSkill] = useState<UserSkill | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,12 +53,17 @@ export default function TrainingScreen() {
       }
       if (tool === "set_belt") {
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        const belt = typeof input.belt === "string" ? input.belt : "new";
+        enqueueSnackbar(`Congratulations! You've earned a ${belt} belt!`, {
+          variant: "success",
+          autoHideDuration: 5000,
+        });
       }
       if (tool === "complete_session") {
         setSessionCompleted(true);
       }
     },
-    [],
+    [enqueueSnackbar],
   );
 
   useEffect(() => {

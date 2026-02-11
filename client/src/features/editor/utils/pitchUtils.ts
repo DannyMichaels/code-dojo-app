@@ -40,10 +40,12 @@ export function shiftPitch(
 
 /**
  * Map of key signatures to the note letters they sharpen or flatten.
- * Sharp keys: G(F#), D(F#C#), A(F#C#G#), E(F#C#G#D#), B(F#C#G#D#A#)
- * Flat keys:  F(Bb), Bb(BbEb), Eb(BbEbAb), Ab(BbEbAbDb), Db(BbEbAbDbGb)
+ * Major sharp keys: G(F#), D(F#C#), A(F#C#G#), E(F#C#G#D#), B(F#C#G#D#A#)
+ * Major flat keys:  F(Bb), Bb(BbEb), Eb(BbEbAb), Ab(BbEbAbDb), Db(BbEbAbDbGb)
+ * Minor keys share accidentals with their relative major.
  */
 const KEY_SIGNATURE_ACCIDENTALS: Record<string, Record<string, string>> = {
+  // Major keys
   C: {},
   G: { f: '#' },
   D: { f: '#', c: '#' },
@@ -55,6 +57,18 @@ const KEY_SIGNATURE_ACCIDENTALS: Record<string, Record<string, string>> = {
   Eb: { b: 'b', e: 'b', a: 'b' },
   Ab: { b: 'b', e: 'b', a: 'b', d: 'b' },
   Db: { b: 'b', e: 'b', a: 'b', d: 'b', g: 'b' },
+  // Minor keys (same accidentals as relative major)
+  Am: {},                                              // = C major
+  Em: { f: '#' },                                      // = G major
+  Bm: { f: '#', c: '#' },                              // = D major
+  'F#m': { f: '#', c: '#', g: '#' },                   // = A major
+  'C#m': { f: '#', c: '#', g: '#', d: '#' },           // = E major
+  'G#m': { f: '#', c: '#', g: '#', d: '#', a: '#' },   // = B major
+  Dm: { b: 'b' },                                      // = F major
+  Gm: { b: 'b', e: 'b' },                              // = Bb major
+  Cm: { b: 'b', e: 'b', a: 'b' },                      // = Eb major
+  Fm: { b: 'b', e: 'b', a: 'b', d: 'b' },              // = Ab major
+  Bbm: { b: 'b', e: 'b', a: 'b', d: 'b', g: 'b' },    // = Db major
 };
 
 /** Get the implied accidentals for a key signature. */

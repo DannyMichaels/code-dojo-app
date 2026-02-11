@@ -53,7 +53,19 @@ function parseNotation(raw?: string): NotationData {
 
 const CLEF_OPTIONS = ['treble', 'bass', 'alto'] as const;
 const TIME_SIG_OPTIONS = ['4/4', '3/4', '2/4', '6/8', '2/2', '3/8'];
-const KEY_SIG_OPTIONS = ['C', 'G', 'D', 'A', 'E', 'B', 'F', 'Bb', 'Eb', 'Ab', 'Db'];
+const KEY_SIG_OPTIONS = [
+  // Major keys
+  'C', 'G', 'D', 'A', 'E', 'B', 'F', 'Bb', 'Eb', 'Ab', 'Db',
+  // Minor keys
+  'Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'Dm', 'Gm', 'Cm', 'Fm', 'Bbm',
+];
+
+const KEY_SIG_LABELS: Record<string, string> = {
+  C: 'C major', G: 'G major', D: 'D major', A: 'A major', E: 'E major',
+  B: 'B major', F: 'F major', Bb: 'Bb major', Eb: 'Eb major', Ab: 'Ab major', Db: 'Db major',
+  Am: 'A minor', Em: 'E minor', Bm: 'B minor', 'F#m': 'F# minor', 'C#m': 'C# minor',
+  'G#m': 'G# minor', Dm: 'D minor', Gm: 'G minor', Cm: 'C minor', Fm: 'F minor', Bbm: 'Bb minor',
+};
 
 export default function MusicPanel({
   notation,
@@ -213,7 +225,7 @@ export default function MusicPanel({
           >
             {KEY_SIG_OPTIONS.map((ks) => (
               <option key={ks} value={ks}>
-                {ks}
+                {KEY_SIG_LABELS[ks] ?? ks}
               </option>
             ))}
           </select>

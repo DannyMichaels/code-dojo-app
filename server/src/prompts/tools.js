@@ -60,10 +60,10 @@ export const TRAINING_TOOLS = [
           type: 'number',
           minimum: 0,
           maximum: 1,
-          description: 'Your assessed mastery score (0.0-1.0) based on holistic judgment. Factor in quality, recurring patterns, help needed, context variety. Can decrease for recurring errors. Set to the student\'s demonstrated level RIGHT NOW — time decay is applied automatically. If omitted, mastery is computed from counters.',
+          description: 'Your assessed mastery score (0.0-1.0) based on holistic judgment. Factor in quality, recurring patterns, help needed, context variety. Can decrease for recurring errors. Set to the student\'s demonstrated level RIGHT NOW — time decay is applied automatically.',
         },
       },
-      required: ['concept', 'success'],
+      required: ['concept', 'success', 'mastery'],
     },
   },
   {
@@ -91,7 +91,7 @@ export const TRAINING_TOOLS = [
   },
   {
     name: 'complete_session',
-    description: 'Mark the session as complete with a summary evaluation. Call this when the training problem has been fully evaluated.',
+    description: 'REQUIRED: Mark the session as complete. You MUST call this tool to end every session — writing "session complete" in chat does NOT end it. The session stays active until this tool is called. Call it after all challenges are evaluated and feedback is given.',
     input_schema: {
       type: 'object',
       properties: {
@@ -129,7 +129,7 @@ export const TRAINING_TOOLS = [
   },
   {
     name: 'set_belt',
-    description: 'Set the student\'s belt level during onboarding. Only valid during onboarding sessions. Use this after observing the student\'s ability level.',
+    description: 'Set or update the student\'s belt level. Use when you\'ve observed enough to determine or change their level — during onboarding, after sustained mastery in training, or after a strong assessment.',
     input_schema: {
       type: 'object',
       properties: {
@@ -144,6 +144,24 @@ export const TRAINING_TOOLS = [
         },
       },
       required: ['belt', 'reason'],
+    },
+  },
+  {
+    name: 'set_assessment_available',
+    description: 'Flag whether the student is ready for a belt assessment. Use when you\'ve observed enough to judge their readiness — or to revoke readiness if they\'ve regressed.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        available: {
+          type: 'boolean',
+          description: 'Whether the student is ready for a belt assessment',
+        },
+        reason: {
+          type: 'string',
+          description: 'Brief justification for the assessment readiness decision',
+        },
+      },
+      required: ['available', 'reason'],
     },
   },
   {

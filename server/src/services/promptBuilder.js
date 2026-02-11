@@ -17,31 +17,28 @@ import { isTechCategory, isMusicCategory } from '../utils/skillCategories.js';
 /**
  * Build the full system prompt for a training session.
  */
-export async function buildSystemPrompt({ skillCatalog, userSkill, sessionType = 'training', socialStats = null }) {
-  const parts = [];
+export async function buildSystemPrompt({ skillCatalog, userSkill, sessionType = 'training', socialStats = null, otherSkills = [] }) {
+  // Static parts (don't change between messages within a session)
+  const staticParts = [];
+  staticParts.push(TRAINING_PROTOCOL);                              // Layer 1
+  staticParts.push(buildSkillContext(skillCatalog));                 // Layer 2
+  staticParts.push(buildSessionInstructions(sessionType, userSkill, skillCatalog)); // Layer 4
+  staticParts.push(buildOutputFormat(sessionType));                  // Layer 5
 
-  // Layer 1: Core Protocol
-  parts.push(TRAINING_PROTOCOL);
-
-  // Layer 2: Skill Context
-  parts.push(buildSkillContext(skillCatalog));
-
-  // Layer 3: Current State
-  parts.push(buildCurrentState(userSkill, socialStats));
-
-  // Layer 3b: Past Problem History (dedup)
-  if (userSkill?._id) {
+  // Dynamic parts (change after tool calls — mastery scores, history, etc.)
+  const dynamicParts = [];
+  dynamicParts.push(buildCurrentState(userSkill, socialStats));     // Layer 3
+  const otherSkillsCtx = buildOtherSkillsContext(otherSkills);      // Layer 3c
+  if (otherSkillsCtx) dynamicParts.push(otherSkillsCtx);
+  if (userSkill?._id) {                                             // Layer 3b
     const history = await buildProblemHistory(userSkill._id);
-    if (history) parts.push(history);
+    if (history) dynamicParts.push(history);
   }
 
-  // Layer 4: Session Instructions
-  parts.push(buildSessionInstructions(sessionType, userSkill, skillCatalog));
-
-  // Layer 5: Output Format
-  parts.push(buildOutputFormat(sessionType));
-
-  return parts.filter(Boolean).join('\n\n');
+  return [
+    staticParts.filter(Boolean).join('\n\n'),
+    dynamicParts.filter(Boolean).join('\n\n'),
+  ];
 }
 
 function buildSkillContext(skillCatalog) {
@@ -143,6 +140,19 @@ function buildCurrentState(userSkill, socialStats) {
   return lines.join('\n');
 }
 
+function buildOtherSkillsContext(otherSkills) {
+  if (!otherSkills || otherSkills.length === 0) return '';
+
+  const lines = ['## Student\'s Other Skills'];
+  for (const skill of otherSkills) {
+    const name = skill.skillCatalogId?.name || 'Unknown';
+    lines.push(`- ${name}: **${skill.currentBelt}** belt`);
+  }
+  lines.push('');
+  lines.push('If the student ever claims a level that contradicts the data above (e.g. "I\'m a React expert" but their JS belt is yellow), you can be playful about the discrepancy — don\'t be mean, but a light tease is fine. If they mention a skill not tracked in the app, acknowledge it and note it as self-reported context.');
+  return lines.join('\n');
+}
+
 function buildSessionInstructions(sessionType, userSkill, skillCatalog) {
   const isTech = isTechCategory(skillCatalog?.category);
   const isMusic = isMusicCategory(skillCatalog?.category);
@@ -163,16 +173,18 @@ function buildSessionInstructions(sessionType, userSkill, skillCatalog) {
 This is the student's first session with this skill.
 
 Instructions:
-1. Welcome them briefly — don't be verbose
-2. Do NOT ask them to self-assess their level — observe it through challenges
-3. Present 3-5 graduated challenges, starting simple and increasing. Call \`present_problem\` to record metadata for each challenge — ${editorInstruction}
-4. After each response, use \`record_observation\` and \`update_mastery\` tools to record data
-5. **CRITICAL — Belt Assignment**: When you've observed enough to determine their level, you MUST call the \`set_belt\` tool BEFORE announcing the belt in chat. Never tell the student their belt without calling the tool first — the tool is what actually saves the belt to the database.
-6. Use \`set_training_context\` to save skill-specific training context (${isTech ? 'what makes code idiomatic, key concept areas, common anti-patterns, evaluation criteria' : 'key concept areas, common mistakes, evaluation criteria, what good practice looks like'})
-7. Use \`complete_session\` when done — this marks the onboarding as finished
-8. Be encouraging but honest about where they're starting
-9. **Follow the Scaffolding Policy**: When a student's ${isTech ? 'code' : 'response'} has issues, do NOT show them the corrected ${isTech ? 'solution' : 'answer'}. Tell them what's wrong conceptually and let them retry. Only reveal the answer if they explicitly give up. This is critical — even during onboarding, you are assessing their ability to self-correct, not just their first attempt.
-10. **Tool Reminder**: Every belt assignment MUST use \`set_belt\`, every observation MUST use \`record_observation\`, and the session MUST end with \`complete_session\`. If you mention a belt, observation, or completion in chat without calling the corresponding tool, the data is LOST.`;
+1. Read the student's first message carefully. If it already tells you what you need to know (their background, why they're learning, experience level), skip the welcome questions and go straight to tailored challenges. Otherwise, welcome them and have a brief, natural conversation — why are they learning this skill? What's their background? Starting from scratch, refreshing rusty knowledge, or already experienced? Don't ask them to rate themselves on a scale — just have a natural, short conversation.
+2. Wait for their response before presenting any challenges (unless their first message already gave you enough context).
+3. Present challenges ONE AT A TIME — present one, wait for the response, evaluate it, then decide what to present next. The number of challenges should be determined by the conversation flow and what you need to observe — don't commit to a fixed number upfront. Call \`present_problem\` to record metadata for each challenge — ${editorInstruction}
+5. After each response, use \`record_observation\` and \`update_mastery\` tools to record data before presenting the next challenge
+6. **CRITICAL — Ending the Onboarding**: When you've observed enough to determine their level, you MUST end the session in a SINGLE turn by calling ALL of these tools together:
+   - \`set_belt\` — assign their belt level
+   - \`set_training_context\` — save skill-specific training context (${isTech ? 'what makes code idiomatic, key concept areas, common anti-patterns, evaluation criteria' : 'key concept areas, common mistakes, evaluation criteria, what good practice looks like'})
+   - \`complete_session\` — mark the onboarding as finished
+   Then write your summary message announcing the belt and wrapping up. Do NOT write a summary, say "great work today", or announce a belt without calling these tools in the same response. If you write a wrap-up without calling the tools, the data is LOST and the session stays open.
+7. Be encouraging but honest about where they're starting
+8. **Follow the Scaffolding Policy**: When a student's ${isTech ? 'code' : 'response'} has issues, do NOT show them the corrected ${isTech ? 'solution' : 'answer'}. Tell them what's wrong conceptually and let them retry. Only reveal the answer if they explicitly give up. This is critical — even during onboarding, you are assessing their ability to self-correct, not just their first attempt.
+9. **Tool Reminder**: Every belt assignment MUST use \`set_belt\`, every observation MUST use \`record_observation\`, and the session MUST end with \`complete_session\`. If you write a summary or say "great work today" without calling the corresponding tools, the data is LOST and the session remains open.`;
 
     case 'assessment':
       return `## Session Type: Belt Assessment
@@ -183,18 +195,18 @@ Current belt: ${userSkill?.currentBelt || 'white'}
 Testing readiness for: next belt
 
 Instructions:
-1. Present 3-5 problems that test breadth AND depth of current belt concepts
+1. Present problems that test breadth AND depth of current belt concepts
 2. Problems should be challenging but fair for the current belt level
 3. Evaluate strictly — belt promotions should be earned
 4. Use all observation and mastery tools for each problem
 5. **Follow the Scaffolding Policy**: Never reveal solutions during an assessment. If the student fails a challenge, note the failure and move on to the next challenge. No hints during assessments — this is evaluation mode.
-6. After all problems, use \`complete_session\` with honest evaluation
-7. **CRITICAL — After calling \`complete_session\`, you MUST write a detailed assessment summary to the student.** The tool result will tell you whether they passed or failed (and if promoted, the new belt). Your final message must include:
+6. **Ending the Assessment**: After all problems, call \`complete_session\` with honest evaluation AND write a detailed assessment summary in the SAME response. The tool result will tell you whether they passed or failed (and if promoted, the new belt). Your final message must include:
    - **Result**: Did they pass or not? If promoted, announce the new belt clearly and celebrate it.
    - **Strengths**: What they demonstrated well during the assessment.
    - **Weaknesses**: Specific areas that need improvement (reference actual problems from the session).
    - **Next steps**: Concrete recommendations — what to practice next, what concepts to focus on, whether to continue training at the current level or prepare for the next assessment.
-   - If they failed, be encouraging — explain exactly what gaps remain and how many more sessions they might need before retrying.`;
+   - If they failed, be encouraging — explain exactly what gaps remain and how many more sessions they might need before retrying.
+   Do NOT write an assessment summary without calling \`complete_session\` in the same turn — if you do, the session stays open and the data is LOST.`;
 
     case 'kata':
       return `## Session Type: Kata (Maintenance)
@@ -202,10 +214,10 @@ Instructions:
 Short practice session to maintain skills and prevent decay.
 
 Instructions:
-1. Present 1-2 focused problems targeting decayed or weak concepts
+1. Present focused problems targeting decayed or weak concepts
 2. Keep it quick — this is maintenance, not deep learning
 3. Use tools to update mastery and record observations
-4. Finish with \`complete_session\``;
+4. **Ending the Kata**: After the student completes the problem, call \`complete_session\` and write a brief wrap-up in the same response. Do NOT write a wrap-up without calling \`complete_session\` in the same turn.`;
 
     case 'training':
     default:
@@ -231,7 +243,8 @@ Instructions:
    d. Use \`update_mastery\` for each concept exercised
    e. Queue reinforcement for weak areas
 8. **Follow the Scaffolding Policy**: If the ${isTech ? 'solution' : 'response'} has errors, do NOT show the corrected ${isTech ? 'code' : 'answer'}. Tell them what's wrong, give a hint, and let them try again. Progressively reveal more help on subsequent attempts. Only show the full ${isTech ? 'solution' : 'answer'} if the student explicitly gives up.${isTech ? ' For minor style issues on otherwise correct code, it\'s fine to show the cleaner version.' : ''}
-9. Only use \`complete_session\` after the student has either ${isTech ? 'solved the problem correctly' : 'answered correctly'} or explicitly given up`;
+9. **Ending the Session**: After the student has either ${isTech ? 'solved the problem correctly' : 'answered correctly'} or explicitly given up, call \`complete_session\` and write a brief wrap-up in the same response. Do NOT write "great work today" or a session summary without calling \`complete_session\` in the same turn — if you do, the session stays open and the data is LOST.
+10. **Belt Promotion**: If you observe sustained mastery that warrants a belt change, call \`set_belt\` directly. If you think they're close but want a formal assessment to confirm, call \`set_assessment_available\` to flag them as ready.`;
   }
 }
 

@@ -2,8 +2,7 @@ import Session from '../models/Session.js';
 import UserSkill from '../models/UserSkill.js';
 import SkillCatalog from '../models/SkillCatalog.js';
 import BeltHistory from '../models/BeltHistory.js';
-import { promoteBelt, failAssessment, checkAssessmentEligibility } from './assessmentService.js';
-import { computeMastery } from './masteryCalc.js';
+import { promoteBelt, failAssessment } from './assessmentService.js';
 import { updateStreak, emitBeltPromotion, emitAssessmentPassed, checkAndEmitStreakMilestone } from './activityService.js';
 
 /**
@@ -28,6 +27,9 @@ export async function handleToolCall(toolCall, { sessionId, skillId, userId }) {
 
     case 'set_belt':
       return handleSetBelt(input, { sessionId, skillId, userId });
+
+    case 'set_assessment_available':
+      return handleSetAssessmentAvailable(input, skillId);
 
     case 'set_training_context':
       return handleSetTrainingContext(input, skillId);
@@ -54,72 +56,69 @@ async function handleRecordObservation(input, sessionId) {
   return { success: true, message: `Observation recorded: ${input.type} on ${input.concept}` };
 }
 
-async function handleUpdateMastery(input, { sessionId, skillId }, _retrying) {
-  const skill = await UserSkill.findById(skillId);
-  if (!skill) return { error: 'Skill not found' };
-
+async function handleUpdateMastery(input, { sessionId, skillId }) {
+  const MAX_RETRIES = 5;
   const conceptKey = input.concept.toLowerCase().replace(/\s+/g, '_');
-  const defaults = {
-    mastery: 0,
-    exposureCount: 0,
-    successCount: 0,
-    lastSeen: null,
-    streak: 0,
-    contexts: [],
-    observations: [],
-    beltLevel: input.belt_level || 'white',
-    readyForNewContext: false,
-  };
-  const raw = skill.concepts.get(conceptKey);
-  const existing = raw ? raw.toObject() : defaults;
 
-  const previousMastery = existing.mastery;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const skill = await UserSkill.findById(skillId);
+    if (!skill) return { error: 'Skill not found' };
 
-  existing.exposureCount += 1;
-  existing.lastSeen = new Date();
+    const defaults = {
+      mastery: 0,
+      exposureCount: 0,
+      successCount: 0,
+      lastSeen: null,
+      streak: 0,
+      contexts: [],
+      observations: [],
+      beltLevel: input.belt_level || 'white',
+      readyForNewContext: false,
+    };
+    const raw = skill.concepts.get(conceptKey);
+    const existing = raw ? raw.toObject() : defaults;
 
-  if (input.success) {
-    existing.successCount += 1;
-    existing.streak += 1;
-  } else {
-    existing.streak = 0;
-  }
+    const previousMastery = existing.mastery;
 
-  if (typeof input.mastery === 'number' && input.mastery >= 0 && input.mastery <= 1) {
-    existing.mastery = input.mastery;
-  } else {
-    existing.mastery = computeMastery(existing);
-  }
+    existing.exposureCount += 1;
+    existing.lastSeen = new Date();
 
-  if (input.context && !existing.contexts.includes(input.context)) {
-    existing.contexts = [...existing.contexts, input.context];
-  }
-
-  if (input.belt_level) {
-    existing.beltLevel = input.belt_level;
-  }
-
-  // Version-checked atomic update
-  const result = await UserSkill.findOneAndUpdate(
-    { _id: skillId, __v: skill.__v },
-    { $set: { [`concepts.${conceptKey}`]: existing }, $inc: { __v: 1 } },
-    { new: true }
-  );
-
-  if (!result) {
-    // Version conflict — retry once
-    if (!_retrying) {
-      return handleUpdateMastery(input, { sessionId, skillId }, true);
+    if (input.success) {
+      existing.successCount += 1;
+      existing.streak += 1;
+    } else {
+      existing.streak = 0;
     }
-    return { error: 'Concurrent modification — please retry' };
+
+    existing.mastery = input.mastery;
+
+    if (input.context && !existing.contexts.includes(input.context)) {
+      existing.contexts = [...existing.contexts, input.context];
+    }
+
+    if (input.belt_level) {
+      existing.beltLevel = input.belt_level;
+    }
+
+    // Version-checked atomic update
+    const result = await UserSkill.findOneAndUpdate(
+      { _id: skillId, __v: skill.__v },
+      { $set: { [`concepts.${conceptKey}`]: existing }, $inc: { __v: 1 } },
+      { new: true }
+    );
+
+    if (result) {
+      // Record mastery update in session log with "from -> to" format
+      await Session.findByIdAndUpdate(sessionId, {
+        [`masteryUpdates.${conceptKey}`]: `${(previousMastery * 100).toFixed(0)}% -> ${(existing.mastery * 100).toFixed(0)}%`,
+      });
+
+      return { success: true, concept: conceptKey, mastery: existing.mastery };
+    }
+    // Version conflict — retry with fresh read
   }
 
-  // Record mastery update in session log with "from -> to" format
-  await Session.findByIdAndUpdate(sessionId, {
-    [`masteryUpdates.${conceptKey}`]: `${(previousMastery * 100).toFixed(0)}% -> ${(existing.mastery * 100).toFixed(0)}%`,
-  });
-
-  return { success: true, concept: conceptKey, mastery: existing.mastery };
+  return { error: 'Concurrent modification — max retries exceeded' };
 }
 
 async function handleQueueReinforcement(input, { sessionId, skillId }) {
@@ -177,13 +176,6 @@ async function handleCompleteSession(input, { sessionId, skillId }) {
       result.quality = input.quality;
       result.message = `Assessment not passed (correctness: ${input.correctness}, quality: ${input.quality}). The student needs more training before retrying. You MUST now write a detailed summary explaining the result, their strengths, weaknesses, and concrete next steps.`;
     }
-  } else {
-    // After regular training, check if assessment should become available
-    try {
-      await checkAssessmentEligibility(skillId);
-    } catch {
-      // Non-critical
-    }
   }
 
   // Update streak and check for milestones on all session completions
@@ -196,9 +188,6 @@ async function handleCompleteSession(input, { sessionId, skillId }) {
 async function handleSetBelt(input, { sessionId, skillId, userId }) {
   const session = await Session.findById(sessionId);
   if (!session) return { error: 'Session not found' };
-  if (session.type !== 'onboarding') {
-    return { error: 'set_belt is only valid during onboarding sessions' };
-  }
 
   const skill = await UserSkill.findById(skillId);
   if (!skill) return { error: 'Skill not found' };
@@ -234,6 +223,16 @@ async function handleSetBelt(input, { sessionId, skillId, userId }) {
   }
 
   return { success: true, message: `Belt set to ${toBelt} (was ${fromBelt}). Reason: ${input.reason}`, belt: toBelt };
+}
+
+async function handleSetAssessmentAvailable(input, skillId) {
+  const skill = await UserSkill.findById(skillId);
+  if (!skill) return { error: 'Skill not found' };
+
+  skill.assessmentAvailable = input.available;
+  await skill.save();
+
+  return { success: true, message: `Assessment availability set to ${input.available}. Reason: ${input.reason}` };
 }
 
 async function handleSetTrainingContext(input, skillId) {

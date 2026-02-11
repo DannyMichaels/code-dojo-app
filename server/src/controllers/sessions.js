@@ -152,6 +152,12 @@ export async function sendMessage(req, res, next) {
       const userSkill = await UserSkill.findById(skillId);
       const skillCatalog = await SkillCatalog.findById(userSkill.skillCatalogId);
 
+      // Fetch other skills for cross-skill context (onboarding awareness)
+      const otherSkills = await UserSkill.find({
+        userId: req.userId,
+        _id: { $ne: skillId },
+      }).populate('skillCatalogId', 'name');
+
       // Atomically push user message to session
       await Session.findByIdAndUpdate(sid, {
         $push: { messages: { role: 'user', content } },
@@ -169,6 +175,7 @@ export async function sendMessage(req, res, next) {
         userSkill,
         sessionType: session.type,
         socialStats,
+        otherSkills,
       });
 
       // Set up SSE
@@ -189,9 +196,11 @@ export async function sendMessage(req, res, next) {
         }));
 
         let fullTextResponse = '';
-        const MAX_TOOL_LOOPS = 10;
+        const toolCount = TRAINING_TOOLS.length;
+        const TOOL_LOOP_SOFT_LIMIT = toolCount * 2;
+        const TOOL_LOOP_HARD_LIMIT = toolCount * 4;
 
-        for (let loop = 0; loop < MAX_TOOL_LOOPS; loop++) {
+        for (let loop = 0; loop < TOOL_LOOP_HARD_LIMIT; loop++) {
           const result = await streamMessage({
             system: systemPrompt,
             messages,
@@ -209,10 +218,21 @@ export async function sendMessage(req, res, next) {
           // If no tool calls, we're done
           if (result.toolCalls.length === 0) break;
 
-          // Process tool calls and build tool result messages
+          if (loop === TOOL_LOOP_SOFT_LIMIT - 1) {
+            console.warn(`[sendMessage] session ${sid}: tool loop reached ${TOOL_LOOP_SOFT_LIMIT}, continuing...`);
+          }
+
+          // Process tool calls in parallel (handlers write to different fields/collections)
+          const toolResultEntries = await Promise.all(
+            result.toolCalls.map(async (tc) => {
+              const toolResult = await handleToolCall(tc, toolContext);
+              return { tc, toolResult };
+            })
+          );
+
+          // Stream results to client in original order
           const toolResults = [];
-          for (const tc of result.toolCalls) {
-            const toolResult = await handleToolCall(tc, toolContext);
+          for (const { tc, toolResult } of toolResultEntries) {
             toolResults.push({
               type: 'tool_result',
               tool_use_id: tc.id,
@@ -233,7 +253,11 @@ export async function sendMessage(req, res, next) {
             { role: 'user', content: toolResults },
           ];
 
-          // Text continues accumulating via onText callback across iterations
+          // Hard limit hit — notify client
+          if (loop === TOOL_LOOP_HARD_LIMIT - 1) {
+            console.error(`[sendMessage] session ${sid}: hit hard limit of ${TOOL_LOOP_HARD_LIMIT} tool loops`);
+            res.write(`data: ${JSON.stringify({ type: 'error', error: 'Tool loop limit reached' })}\n\n`);
+          }
         }
 
         // Atomically push assistant message

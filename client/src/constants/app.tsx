@@ -1,5 +1,4 @@
-export const APP_NAME = 'Code Dojo';
-export const AUTHOR_NAME = 'Daniel Michael';
+export { APP_NAME, AUTHOR_NAME } from 'code-dojo-shared/constants';
 
 export function BrandIcon({ size = 24, color = 'currentColor' }: { size?: number; color?: string }) {
   return (

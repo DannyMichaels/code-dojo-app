@@ -5,6 +5,7 @@ import './FloatingEditor.scss';
 interface FloatingEditorProps {
   onDock: () => void;
   children: ReactNode;
+  title?: string;
 }
 
 type Edge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
@@ -12,7 +13,7 @@ type Edge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 const MIN_WIDTH = 320;
 const MIN_HEIGHT = 240;
 
-export default function FloatingEditor({ onDock, children }: FloatingEditorProps) {
+export default function FloatingEditor({ onDock, children, title = 'Code Editor' }: FloatingEditorProps) {
   const [pos, setPos] = useState({ top: 80, left: window.innerWidth - 660 });
   const [size, setSize] = useState({ width: 640, height: 480 });
   const dragging = useRef(false);
@@ -109,7 +110,7 @@ export default function FloatingEditor({ onDock, children }: FloatingEditorProps
       <div className="FloatingEditor__corner FloatingEditor__corner--se" onMouseDown={(e) => handleEdgeResize(e, 'se')} />
 
       <div className="FloatingEditor__titlebar" onMouseDown={handleTitleMouseDown}>
-        <span className="FloatingEditor__title">Code Editor</span>
+        <span className="FloatingEditor__title">{title}</span>
         <button className="FloatingEditor__dock" onClick={onDock}>
           Dock
         </button>

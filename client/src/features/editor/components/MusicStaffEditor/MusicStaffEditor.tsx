@@ -12,7 +12,7 @@ import {
   Beam,
   type RenderContext,
 } from 'vexflow';
-import { getPitchesForClef } from '../../utils/pitchUtils';
+import { getPitchesForClef, getKeySignatureAccidentals } from '../../utils/pitchUtils';
 import { getNoteIndexAtPoint, applyNoteIndexAttributes } from '../../utils/noteHitDetection';
 import { parseTimeSignature } from '../../utils/durationUtils';
 import { splitIntoMeasures } from '../../utils/measureUtils';
@@ -108,7 +108,7 @@ export default function MusicStaffEditor({
 
     container.innerHTML = '';
 
-    const hasKeySig = !!(keySignature && keySignature !== 'C');
+    const hasKeySig = !!(keySignature && Object.keys(getKeySignatureAccidentals(keySignature)).length > 0);
     const { numBeats, beatValue } = parseTimeSignature(timeSignature);
     const logicalWidth = Math.floor(containerWidth / STAVE_SCALE);
 

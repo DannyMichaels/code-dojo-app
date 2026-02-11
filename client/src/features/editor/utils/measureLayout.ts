@@ -11,87 +11,107 @@ export interface MeasureLayout {
   lineIndex: number;
 }
 
-const STAVE_HEIGHT = 120; // vertical space per stave line (stave + gap)
+const STAVE_HEIGHT = 90; // vertical space per stave line (stave + gap) in logical units
 const CLEF_WIDTH = 40; // extra width for clef at start of each line
 const TIME_SIG_WIDTH = 30; // extra width for time signature on first measure
 const KEY_SIG_WIDTH = 20; // extra width for key signature on first measure
-const MIN_MEASURE_WIDTH = 100;
-const STAVE_PADDING = 20; // left/right margin
+const MIN_MEASURE_WIDTH = 120;
+const STAVE_PADDING = 10; // left margin only (right edge = container edge)
+
+/** Get the fixed decoration overhead for a measure (clef, time sig, key sig). */
+function getDecorationWidth(
+  measureIndex: number,
+  isFirstOnLine: boolean,
+  hasKeySig: boolean,
+): number {
+  let w = 0;
+  if (isFirstOnLine) w += CLEF_WIDTH;
+  if (measureIndex === 0) {
+    w += TIME_SIG_WIDTH;
+    if (hasKeySig) w += KEY_SIG_WIDTH;
+  }
+  return w;
+}
 
 /**
- * Compute the layout (position + size) for each measure, wrapping to new lines
- * when measures overflow the container width.
+ * Compute the layout (position + size) for each measure.
+ * Two-pass algorithm:
+ *   Pass 1 — assign measures to lines using minimum widths.
+ *   Pass 2 — stretch measures on each line to fill the full container width.
  */
 export function computeMeasureLayout(
   measures: Measure[],
   containerWidth: number,
-  beatsPerMeasure: number,
+  _beatsPerMeasure: number,
   hasKeySig: boolean,
 ): MeasureLayout[] {
   if (measures.length === 0 || containerWidth <= 0) return [];
 
-  const usableWidth = containerWidth - STAVE_PADDING * 2;
+  const usableWidth = containerWidth - STAVE_PADDING;
 
-  // Base width per beat — we'll scale measure widths proportionally
-  const baseBeatWidth = Math.max(
-    30,
-    Math.min(80, usableWidth / (beatsPerMeasure * 4)),
-  );
-
-  const layouts: MeasureLayout[] = [];
-  let lineIndex = 0;
-  let x = STAVE_PADDING;
-  let lineStart = 0;
+  // --- Pass 1: assign measures to lines based on minimum widths ---
+  const lines: number[][] = [[]];
+  let lineUsed = 0;
 
   for (let i = 0; i < measures.length; i++) {
-    const isFirstMeasure = i === 0;
-    const isFirstOnLine = i === lineStart;
+    const isLineStart = lines[lines.length - 1].length === 0;
+    const decorW = getDecorationWidth(i, isLineStart || i === 0, hasKeySig);
+    const minW = MIN_MEASURE_WIDTH + decorW;
 
-    // Calculate measure width
-    let width = Math.max(
-      MIN_MEASURE_WIDTH,
-      measures[i].totalBeats * baseBeatWidth,
-    );
-
-    // Extra space for decorations
-    let extraWidth = 0;
-    if (isFirstOnLine) extraWidth += CLEF_WIDTH;
-    if (isFirstMeasure) {
-      extraWidth += TIME_SIG_WIDTH;
-      if (hasKeySig) extraWidth += KEY_SIG_WIDTH;
+    if (!isLineStart && lineUsed + minW > usableWidth) {
+      // Wrap to a new line
+      lines.push([i]);
+      const newDecorW = getDecorationWidth(i, true, hasKeySig);
+      lineUsed = MIN_MEASURE_WIDTH + newDecorW;
+    } else {
+      lines[lines.length - 1].push(i);
+      lineUsed += minW;
     }
-    width += extraWidth;
+  }
 
-    // Check if this measure fits on the current line
-    if (!isFirstOnLine && x + width > containerWidth - STAVE_PADDING) {
-      // Wrap to new line
-      lineIndex++;
-      x = STAVE_PADDING;
-      lineStart = i;
+  // --- Pass 2: stretch each line's measures to fill usableWidth ---
+  const layouts: MeasureLayout[] = [];
+
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const lineIndices = lines[lineIdx];
+
+    // Sum of beats and fixed overhead on this line
+    let totalBeats = 0;
+    let totalFixed = 0;
+    for (const mi of lineIndices) {
+      totalBeats += measures[mi].totalBeats;
+      const isFirst = mi === lineIndices[0];
+      totalFixed += getDecorationWidth(mi, isFirst, hasKeySig);
     }
 
-    const isFirstOnLineAfterWrap = i === lineStart;
-    // If we just wrapped, recalculate width with clef space
-    if (isFirstOnLineAfterWrap && !isFirstOnLine) {
-      width = Math.max(
+    // Width available for beat-proportional distribution
+    const beatSpace = Math.max(0, usableWidth - totalFixed);
+    const beatWidth = totalBeats > 0 ? beatSpace / totalBeats : 0;
+
+    let x = STAVE_PADDING;
+
+    for (const mi of lineIndices) {
+      const isFirstOnLine = mi === lineIndices[0];
+      const isFirstMeasure = mi === 0;
+      const decorW = getDecorationWidth(mi, isFirstOnLine, hasKeySig);
+      const width = Math.max(
         MIN_MEASURE_WIDTH,
-        measures[i].totalBeats * baseBeatWidth,
+        measures[mi].totalBeats * beatWidth + decorW,
       );
-      width += CLEF_WIDTH;
+
+      layouts.push({
+        measureIndex: mi,
+        x,
+        y: lineIdx * STAVE_HEIGHT + 30,
+        width,
+        isFirstOnLine,
+        isFirstMeasure,
+        isLastMeasure: mi === measures.length - 1,
+        lineIndex: lineIdx,
+      });
+
+      x += width;
     }
-
-    layouts.push({
-      measureIndex: i,
-      x,
-      y: lineIndex * STAVE_HEIGHT + 30,
-      width,
-      isFirstOnLine: isFirstOnLineAfterWrap || isFirstOnLine,
-      isFirstMeasure,
-      isLastMeasure: i === measures.length - 1,
-      lineIndex,
-    });
-
-    x += width;
   }
 
   return layouts;
