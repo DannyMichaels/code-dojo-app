@@ -1,4 +1,5 @@
 import type { StaveNote } from 'vexflow';
+import { getPitchesForClef } from './pitchUtils';
 
 /**
  * Find which note index was clicked, using the stored StaveNote references.
@@ -31,6 +32,33 @@ export function getNoteIndexAtPoint(
 /**
  * Set `data-note-index` attribute on each rendered StaveNote's SVG element.
  */
+/**
+ * Given a chord's keys array, a logical Y position, a getClickPitch function,
+ * and the clef, resolve which key index in the chord was targeted.
+ * Returns 0 for single-key notes or if resolution fails.
+ */
+export function resolveKeyIndexForNote(
+  keys: string[],
+  logicalY: number,
+  getClickPitch: (logicalY: number) => string | null,
+  clef: string,
+): number {
+  if (keys.length <= 1) return 0;
+  const clickedPitch = getClickPitch(logicalY);
+  if (!clickedPitch) return 0;
+  const pitches = getPitchesForClef(clef);
+  let bestIdx = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < keys.length; i++) {
+    const dist = Math.abs(pitches.indexOf(keys[i]) - pitches.indexOf(clickedPitch));
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
 export function applyNoteIndexAttributes(staveNotes: StaveNote[]): void {
   for (let i = 0; i < staveNotes.length; i++) {
     try {

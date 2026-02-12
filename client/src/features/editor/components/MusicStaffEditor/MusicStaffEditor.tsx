@@ -13,7 +13,7 @@ import {
   type RenderContext,
 } from 'vexflow';
 import { getPitchesForClef, getKeySignatureAccidentals } from '../../utils/pitchUtils';
-import { getNoteIndexAtPoint, applyNoteIndexAttributes } from '../../utils/noteHitDetection';
+import { getNoteIndexAtPoint, applyNoteIndexAttributes, resolveKeyIndexForNote } from '../../utils/noteHitDetection';
 import { parseTimeSignature } from '../../utils/durationUtils';
 import { splitIntoMeasures } from '../../utils/measureUtils';
 import { computeMeasureLayout, computeTotalHeight } from '../../utils/measureLayout';
@@ -359,7 +359,7 @@ export default function MusicStaffEditor({
     handleMouseDown: dragMouseDown,
     handleMouseMove: dragMouseMove,
     handleMouseUp: dragMouseUp,
-  } = useDragDrop(notes, onNotesChange, staveNotesRef, screenToLogical, getClickPitch);
+  } = useDragDrop(notes, onNotesChange, staveNotesRef, screenToLogical, getClickPitch, clef);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -481,21 +481,8 @@ export default function MusicStaffEditor({
   const resolveKeyIndex = useCallback(
     (noteIndex: number, logicalY: number): number => {
       const note = notes[noteIndex];
-      if (!note || note.keys.length <= 1) return 0;
-      // Use logical Y to find the closest pitch in this chord
-      const clickedPitch = getClickPitch(logicalY);
-      if (!clickedPitch) return 0;
-      const pitches = getPitchesForClef(clef);
-      let bestIdx = 0;
-      let bestDist = Infinity;
-      for (let i = 0; i < note.keys.length; i++) {
-        const dist = Math.abs(pitches.indexOf(note.keys[i]) - pitches.indexOf(clickedPitch));
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestIdx = i;
-        }
-      }
-      return bestIdx;
+      if (!note) return 0;
+      return resolveKeyIndexForNote(note.keys, logicalY, getClickPitch, clef);
     },
     [notes, clef, getClickPitch],
   );

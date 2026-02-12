@@ -1,12 +1,16 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../auth/store/auth.store';
 import Button from '../../../components/shared/Button';
 import Input from '../../../components/shared/Input';
+import ConfirmDialog from '../../../components/shared/ConfirmDialog';
+import { deleteAccount } from '../../auth/services/auth.service';
 import api from '../../../api/client';
 import './SettingsScreen.scss';
 
 export default function SettingsScreen() {
-  const { user, setUser } = useAuthStore();
+  const { user, setUser, logout } = useAuthStore();
+  const navigate = useNavigate();
 
   const [name, setName] = useState(user?.name || '');
   const [username, setUsername] = useState(user?.username || '');
@@ -16,6 +20,8 @@ export default function SettingsScreen() {
   const [feedbackStyle, setFeedbackStyle] = useState<'encouraging' | 'direct' | 'minimal'>(user?.preferences?.feedbackStyle || 'direct');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +108,36 @@ export default function SettingsScreen() {
 
         <Button type="submit" loading={saving}>Save Settings</Button>
       </form>
+
+      <section className="SettingsScreen__section SettingsScreen__section--danger">
+        <h3>Danger Zone</h3>
+        <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+        <Button variant="danger" loading={deleting} onClick={() => setShowDeleteConfirm(true)}>
+          Delete Account
+        </Button>
+      </section>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? All your data including training history, belt progress, and social connections will be permanently removed."
+        confirmLabel="Delete Account"
+        variant="danger"
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          setDeleting(true);
+          try {
+            await deleteAccount();
+            logout();
+            navigate('/login');
+          } catch {
+            setMessage({ type: 'error', text: 'Failed to delete account' });
+            setShowDeleteConfirm(false);
+          } finally {
+            setDeleting(false);
+          }
+        }}
+      />
     </div>
   );
 }

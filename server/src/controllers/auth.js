@@ -1,6 +1,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Session from '../models/Session.js';
+import UserSkill from '../models/UserSkill.js';
+import BeltHistory from '../models/BeltHistory.js';
+import Follow from '../models/Follow.js';
+import Activity from '../models/Activity.js';
 import env from '../config/env.js';
 
 function generateToken(userId) {
@@ -109,6 +114,29 @@ export async function updateMe(req, res, next) {
       return res.status(404).json({ error: 'User not found' });
     }
     res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteMe(req, res, next) {
+  try {
+    const userId = req.userId;
+
+    const userSkills = await UserSkill.find({ userId }, '_id');
+    const userSkillIds = userSkills.map(s => s._id);
+
+    await Promise.all([
+      Session.deleteMany({ userId }),
+      UserSkill.deleteMany({ userId }),
+      BeltHistory.deleteMany({ userSkillId: { $in: userSkillIds } }),
+      Follow.deleteMany({ $or: [{ followerId: userId }, { followingId: userId }] }),
+      Activity.deleteMany({ userId }),
+    ]);
+
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: 'Account deleted' });
   } catch (err) {
     next(err);
   }

@@ -2,7 +2,6 @@
 @use '../../styles/mixins' as *;
 
 .AppLayout {
-  display: flex;
   min-height: 100vh;
 
   &__hamburger {
@@ -36,27 +35,41 @@
     }
   }
 
+  // ---------- Sidebar ----------
   &__sidebar {
-    width: 240px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: $sidebar-width-expanded;
     background: $background-color-alt;
     border-right: 1px solid $grayDark;
     display: flex;
     flex-direction: column;
     padding: $spacing-lg $spacing-md;
-    flex-shrink: 0;
+    z-index: 100;
+    transition: width 0.25s ease, padding 0.25s ease;
 
     @include mobile {
       display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
       z-index: 1000;
 
       &--open {
         display: flex;
       }
     }
+  }
+
+  // ---------- Brand row ----------
+  &__brandRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-lg;
+    padding: 0 $spacing-sm;
+    padding-bottom: $spacing-md;
+    border-bottom: 1px solid $grayDark;
+    min-height: 32px;
   }
 
   &__brand {
@@ -67,17 +80,89 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: $primaryColor;
-    margin-bottom: $spacing-xl;
-    padding: 0 $spacing-sm;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
+  &__brandText {
+    transition: opacity 0.2s ease, width 0.25s ease;
+    overflow: hidden;
+  }
+
+  &__collapseBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $whiteDark;
+    padding: $spacing-xs;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    transition: color $transition-default, background $transition-default;
+    flex-shrink: 0;
+
+    &:hover {
+      color: $primaryColorWhite;
+      background: $background-color-alt-glass;
+    }
+
+    @include mobile {
+      display: none;
+    }
+  }
+
+  // ---------- Search ----------
+  &__search {
+    position: relative;
+    padding: $spacing-xs $spacing-sm;
+    margin-bottom: $spacing-xs;
+    border-bottom: 1px solid $grayDark;
+    padding-bottom: $spacing-sm;
+  }
+
+  &__searchIconLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: $spacing-sm;
+    border-radius: $radius-md;
+    color: $primaryColorWhite;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background $transition-default;
+
+    &:hover {
+      background: $background-color-alt-glass;
+    }
+  }
+
+  &__searchPopover {
+    position: absolute;
+    left: $sidebar-width-collapsed;
+    top: 0;
+    width: 280px;
+    background: $background-color-alt;
+    border: 1px solid $grayDark;
+    border-radius: $radius-md;
+    padding: $spacing-sm;
+    z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  // ---------- Nav (scrollable) ----------
   &__nav {
     display: flex;
     flex-direction: column;
     gap: $spacing-xs;
     flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    @include scrollbar;
   }
 
+  // ---------- Links ----------
   &__link {
     display: flex;
     align-items: center;
@@ -88,6 +173,8 @@
     font-size: 0.9375rem;
     transition: background $transition-default;
     text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
 
     &:hover {
       background: $background-color-alt-glass;
@@ -105,10 +192,13 @@
     }
   }
 
-  &__search {
-    padding: $spacing-xs 0;
+  &__linkText {
+    transition: opacity 0.2s ease, width 0.25s ease;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
+  // ---------- Skills ----------
   &__skills {
     display: flex;
     flex-direction: column;
@@ -123,10 +213,24 @@
     color: $whiteDark;
     padding: $spacing-xs $spacing-md;
     margin-top: $spacing-sm;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  &__skillsCategory {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   &__skillsCategoryLabel {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    width: 100%;
+    background: none;
+    border: none;
     font-size: 0.625rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -134,8 +238,34 @@
     padding: $spacing-xs $spacing-md;
     margin-top: $spacing-sm;
     opacity: 0.8;
+    cursor: pointer;
+    transition: opacity $transition-default;
+    white-space: nowrap;
+    overflow: hidden;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 
+  &__skillsCategoryChevron {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__skillsCategoryText {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  &__skillsCategoryIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // ---------- User section (pinned bottom) ----------
   &__user {
     border-top: 1px solid $grayDark;
     padding-top: $spacing-md;
@@ -153,6 +283,7 @@
     text-decoration: none;
     color: $primaryColorWhite;
     transition: background $transition-default;
+    overflow: hidden;
 
     &:hover {
       background: $background-color-alt-glass;
@@ -169,15 +300,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  &__username {
-    font-size: 0.875rem;
-    color: $grayLight;
-    padding: 0 $spacing-sm;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    transition: opacity 0.2s ease, width 0.25s ease;
   }
 
   &__logout {
@@ -189,20 +312,94 @@
     color: $primaryColorWhite;
     text-align: left;
     transition: color $transition-default;
+    white-space: nowrap;
+    overflow: hidden;
 
     &:hover {
       color: $colorDanger;
     }
   }
 
+  // ---------- Main content ----------
   &__main {
-    flex: 1;
+    margin-left: $sidebar-width-expanded;
     padding: $spacing-xl;
-    overflow-y: auto;
+    min-height: 100vh;
+    transition: margin-left 0.25s ease;
 
     @include scrollbar;
     @include mobile {
+      margin-left: 0;
       padding: $spacing-md;
+    }
+  }
+
+  // ========== Collapsed state ==========
+  &--collapsed {
+    .AppLayout__sidebar {
+      width: $sidebar-width-collapsed;
+      padding: $spacing-lg $spacing-xs;
+    }
+
+    .AppLayout__main {
+      margin-left: $sidebar-width-collapsed;
+    }
+
+    .AppLayout__brandText,
+    .AppLayout__linkText,
+    .AppLayout__profileName {
+      opacity: 0;
+      width: 0;
+    }
+
+    .AppLayout__brandRow {
+      justify-content: center;
+      padding: 0 0 $spacing-md 0;
+    }
+
+    .AppLayout__brand {
+      gap: 0;
+    }
+
+    .AppLayout__link {
+      justify-content: center;
+      padding: $spacing-sm;
+
+      &--skill {
+        padding: $spacing-xs $spacing-sm;
+      }
+    }
+
+    .AppLayout__profileLink {
+      justify-content: center;
+    }
+
+    .AppLayout__logout {
+      justify-content: center;
+      padding: $spacing-sm;
+    }
+
+    .AppLayout__skillsLabel {
+      opacity: 0;
+      height: 0;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .AppLayout__skillsCategoryLabel {
+      justify-content: center;
+      padding: $spacing-xs $spacing-sm;
+    }
+
+    .AppLayout__skillsCategoryText {
+      display: none;
+    }
+
+    .AppLayout__search {
+      padding: $spacing-xs 0;
+      display: flex;
+      justify-content: center;
     }
   }
 }

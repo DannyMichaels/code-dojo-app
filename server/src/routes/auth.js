@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe, updateMe, uploadAvatar } from '../controllers/auth.js';
+import { register, login, getMe, updateMe, uploadAvatar, deleteMe } from '../controllers/auth.js';
 import auth from '../middleware/auth.js';
 import validate from '../middleware/validate.js';
 import { registerSchema, loginSchema, updateProfileSchema } from '../schemas/auth.js';
@@ -12,5 +12,6 @@ router.post('/login', validate(loginSchema), login);
 router.get('/me', auth, getMe);
 router.put('/me', auth, validate(updateProfileSchema), updateMe);
 router.put('/me/avatar', auth, validate(avatarSchema), uploadAvatar);
+router.delete('/me', auth, deleteMe);
 
 export default router;

@@ -1,0 +1,23 @@
+@use '../../../styles/variables' as *;
+
+.Tooltip {
+  position: relative;
+
+  &__label {
+    position: fixed;
+    white-space: nowrap;
+    background: $grayDark;
+    color: $primaryColorWhite;
+    font-size: 0.75rem;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $radius-sm;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 1000;
+
+    &--visible {
+      opacity: 1;
+    }
+  }
+}

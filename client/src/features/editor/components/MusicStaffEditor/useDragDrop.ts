@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { StaveNote } from 'vexflow';
 import type { NoteData } from './MusicStaffEditor';
-import { getNoteIndexAtPoint } from '../../utils/noteHitDetection';
+import { getNoteIndexAtPoint, resolveKeyIndexForNote } from '../../utils/noteHitDetection';
+import { getPitchesForClef } from '../../utils/pitchUtils';
 
 export interface UseDragDropReturn {
   isDragging: boolean;
@@ -19,14 +20,20 @@ export function useDragDrop(
   staveNotesRef: React.RefObject<StaveNote[]>,
   screenToLogical: (x: number, y: number) => { x: number; y: number } | null,
   getClickPitch: (logicalY: number) => string | null,
+  clef: string,
 ): UseDragDropReturn {
   const [isDragging, setIsDragging] = useState(false);
   const dragIndexRef = useRef<number | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const dragActivatedRef = useRef(false);
   const currentPitchRef = useRef<string | null>(null);
+  const dragKeyIndexRef = useRef<number>(0);
+  const swapPendingRef = useRef(false);
   const notesRef = useRef(notes);
   notesRef.current = notes;
+
+  // Reset swap guard each render so the next mouse-move can trigger a swap
+  swapPendingRef.current = false;
 
   // Clean up if mouse leaves the window during drag
   useEffect(() => {
@@ -36,6 +43,7 @@ export function useDragDrop(
       dragStartRef.current = null;
       dragActivatedRef.current = false;
       currentPitchRef.current = null;
+      dragKeyIndexRef.current = 0;
       setIsDragging(false);
     };
     window.addEventListener('mouseup', handleGlobalMouseUp);
@@ -49,14 +57,17 @@ export function useDragDrop(
 
       const hitIdx = getNoteIndexAtPoint(logical.x, logical.y, staveNotesRef.current ?? []);
       if (hitIdx >= 0) {
+        const note = notesRef.current[hitIdx];
+        const ki = resolveKeyIndexForNote(note?.keys ?? [], logical.y, getClickPitch, clef);
         dragIndexRef.current = hitIdx;
+        dragKeyIndexRef.current = ki;
         dragStartRef.current = { x: e.clientX, y: e.clientY };
         dragActivatedRef.current = false;
-        currentPitchRef.current = notesRef.current[hitIdx]?.keys[0] ?? null;
+        currentPitchRef.current = note?.keys[ki] ?? null;
         e.preventDefault();
       }
     },
-    [staveNotesRef, screenToLogical],
+    [staveNotesRef, screenToLogical, getClickPitch, clef],
   );
 
   const handleMouseMove = useCallback(
@@ -75,17 +86,82 @@ export function useDragDrop(
       const logical = screenToLogical(e.clientX, e.clientY);
       if (!logical) return;
 
-      const newPitch = getClickPitch(logical.y);
-      if (!newPitch || newPitch === currentPitchRef.current) return;
+      let idx = dragIndexRef.current;
+      let currentNotes = notesRef.current;
 
-      currentPitchRef.current = newPitch;
-      const idx = dragIndexRef.current;
-      const updated = notesRef.current.map((n, i) =>
-        i === idx ? { ...n, keys: [newPitch] } : n,
-      );
-      onNotesChange(updated);
+      // --- Vertical: re-pitch the dragged key ---
+      const newPitch = getClickPitch(logical.y);
+      if (newPitch && newPitch !== currentPitchRef.current) {
+        currentPitchRef.current = newPitch;
+        const note = currentNotes[idx];
+        if (note) {
+          const ki = dragKeyIndexRef.current;
+          const pitches = getPitchesForClef(clef);
+
+          // Build new keys + accidentals, updating only the dragged key
+          const newKeys = [...note.keys];
+          const newAcc = note.accidentals ? [...note.accidentals] : note.keys.map(() => null);
+          newKeys[ki] = newPitch;
+          // Clear accidental for the moved key (new position may differ)
+          newAcc[ki] = null;
+
+          // Re-sort low-to-high (VexFlow expects sorted keys), keeping accidentals paired
+          const pairs = newKeys.map((k, i) => ({ key: k, acc: newAcc[i], wasDragged: i === ki }));
+          pairs.sort((a, b) => pitches.indexOf(b.key) - pitches.indexOf(a.key));
+          dragKeyIndexRef.current = pairs.findIndex((p) => p.wasDragged);
+
+          currentNotes = currentNotes.map((n, i) =>
+            i === idx
+              ? { ...n, keys: pairs.map((p) => p.key), accidentals: pairs.map((p) => p.acc) }
+              : n,
+          );
+          onNotesChange(currentNotes);
+        }
+      }
+
+      // --- Horizontal: swap with neighbor ---
+      if (!swapPendingRef.current) {
+        const staveNotes = staveNotesRef.current ?? [];
+        if (idx >= 0 && idx < staveNotes.length) {
+          try {
+            const draggedX = staveNotes[idx].getAbsoluteX();
+
+            // Check left neighbor
+            if (idx > 0) {
+              const leftX = staveNotes[idx - 1].getAbsoluteX();
+              const midpoint = (leftX + draggedX) / 2;
+              if (logical.x < midpoint) {
+                // Swap with left neighbor
+                const swapped = [...notesRef.current];
+                [swapped[idx - 1], swapped[idx]] = [swapped[idx], swapped[idx - 1]];
+                dragIndexRef.current = idx - 1;
+                swapPendingRef.current = true;
+                onNotesChange(swapped);
+                return;
+              }
+            }
+
+            // Check right neighbor
+            if (idx < staveNotes.length - 1) {
+              const rightX = staveNotes[idx + 1].getAbsoluteX();
+              const midpoint = (draggedX + rightX) / 2;
+              if (logical.x > midpoint) {
+                // Swap with right neighbor
+                const swapped = [...notesRef.current];
+                [swapped[idx], swapped[idx + 1]] = [swapped[idx + 1], swapped[idx]];
+                dragIndexRef.current = idx + 1;
+                swapPendingRef.current = true;
+                onNotesChange(swapped);
+                return;
+              }
+            }
+          } catch {
+            // getAbsoluteX may throw if note isn't rendered
+          }
+        }
+      }
     },
-    [screenToLogical, getClickPitch, onNotesChange],
+    [screenToLogical, getClickPitch, onNotesChange, clef, staveNotesRef],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -93,6 +169,7 @@ export function useDragDrop(
     dragStartRef.current = null;
     dragActivatedRef.current = false;
     currentPitchRef.current = null;
+    dragKeyIndexRef.current = 0;
     setIsDragging(false);
   }, []);
 
